@@ -1,5 +1,9 @@
 git:
     submodules: false
+language: cpp
+compiler:
+    - gcc
+    - clang
 install:
     - cd third;./setup
 script:
