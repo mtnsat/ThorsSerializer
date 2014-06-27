@@ -1,0 +1,5 @@
+install:
+    - cd third;./setup
+script:
+    - make 
+
