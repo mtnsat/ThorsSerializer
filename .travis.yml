@@ -5,7 +5,9 @@ compiler:
     - gcc
     - clang
 install:
-    - cd third;./setup
+    - pushd third
+    - ./setup
+    - popd
 script:
     - make 
 
