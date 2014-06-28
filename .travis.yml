@@ -4,6 +4,10 @@ language: cpp
 compiler:
     - gcc
     - clang
+before_install:
+    - mv .gitmodules gitmodules.old
+    - sed -e 's#git@github.com:#https://github.com/#' gitmodules.old > .gitmodules
+    - rm gitmodules.old
 install:
     - pushd third
     - ./setup
