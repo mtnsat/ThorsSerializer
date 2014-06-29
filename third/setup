@@ -28,7 +28,7 @@ ${install} install flex
 if [[ "${host}" == "Linux" ]]; then
     ${install} install libboost-dev
     ${install} install libboost-doc
-if
+fi
 if [[ "${host}" == "Darwin" ]]; then
     ${install} install boost
 fi
