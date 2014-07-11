@@ -3,6 +3,7 @@
 #define THORSANVIL_PARSER_PARSER_SCANNER_DOM_H
 
 #include "ParserInterface.h"
+#include "ParserDom.h"
 
 
 namespace ThorsAnvil

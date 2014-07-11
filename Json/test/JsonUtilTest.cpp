@@ -15,11 +15,11 @@ TEST(JsonUtil, MergeArrays)
     ScannerDom      scanner;
 
     std::stringstream   data1("[1, 2, 3, 4]");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserArray>    array1 = std::move(scanner.getArray());
 
     std::stringstream   data2("[1, 2, 3, 4]");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserArray>    array2 = std::move(scanner.getArray());
 
     mergeParserDom(*array1, *array2, "Test");
@@ -32,11 +32,11 @@ TEST(JsonUtil, MergeMaps)
     ScannerDom      scanner;
 
     std::stringstream   data1("{ \"item1\": 1, \"item2\": 2, \"item3\": 3, \"item4\": 4}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserMap>    map1 = std::move(scanner.getMap());
 
     std::stringstream   data2("{ \"item5\": 1, \"item6\": 2, \"item7\": 3, \"item8\": 4}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserMap>    map2 = std::move(scanner.getMap());
 
     mergeParserDom(*map1, *map2, "Test");
@@ -49,11 +49,11 @@ TEST(JsonUtil, OverwiteMapPODElement)
     ScannerDom      scanner;
 
     std::stringstream   data1("{ \"item1\": 4}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserMap>    map1 = std::move(scanner.getMap());
 
     std::stringstream   data2("{ \"item1\": 5}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserMap>    map2 = std::move(scanner.getMap());
 
     mergeParserDom(*map1, *map2, "Test");
@@ -67,11 +67,11 @@ TEST(JsonUtil, OverwiteMapElement)
     ScannerDom      scanner;
 
     std::stringstream   data1("{ \"item1\": {\"t1\": 9}}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserMap>    map1 = std::move(scanner.getMap());
 
     std::stringstream   data2("{ \"item1\": {\"t2\": 15}}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserMap>    map2 = std::move(scanner.getMap());
 
     mergeParserDom(*map1, *map2, "Test");
@@ -88,11 +88,11 @@ TEST(JsonUtil, AddElementsToArrayInMap)
     ScannerDom      scanner;
 
     std::stringstream   data1("{ \"item1\": [ 1, 2, 3 ]}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserMap>    map1 = std::move(scanner.getMap());
 
     std::stringstream   data2("{ \"item1\": {\"item5\": 34}}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserMap>    map2 = std::move(scanner.getMap());
 
     mergeParserDom(*map1, *map2, "Test");
@@ -108,11 +108,11 @@ TEST(JsonUtil, AddArrayToArrayInMap)
     ScannerDom      scanner;
 
     std::stringstream   data1("{ \"item1\": [ 1, 2, 3 ]}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserMap>    map1 = std::move(scanner.getMap());
 
     std::stringstream   data2("{ \"item1\": [ 4, 5, {\"plop\": 8}]}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserMap>    map2 = std::move(scanner.getMap());
 
     mergeParserDom(*map1, *map2, "Test");
@@ -128,11 +128,11 @@ TEST(JsonUtil, MergeNonMapIntoMap)
     ScannerDom      scanner;
 
     std::stringstream   data1("{ \"item1\": {\"plop\": 1}}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data1);
+    scanner.parse<JsonParser>(data1);
     std::unique_ptr<ParserMap>    map1 = std::move(scanner.getMap());
 
     std::stringstream   data2("{ \"item1\": 12}");
-    scanner.parse<JsonParser<yy::ParserShiftReduce>>(data2);
+    scanner.parse<JsonParser>(data2);
     std::unique_ptr<ParserMap>    map2 = std::move(scanner.getMap());
 
     ASSERT_THROW(mergeParserDom(*map1, *map2, "Test"), std::runtime_error);

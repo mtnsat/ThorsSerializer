@@ -33,4 +33,26 @@ if [[ "${host}" == "Darwin" ]]; then
     ${install} install boost
 fi
 
+echo "Un-archiving libyaml"
+LIBYAML_ARCHIEVE=`ls yaml-*.tar.gz 2>/dev/null | tail -n 1`
+if [[ ${LIBYAML_ARCHIEVE} == "" ]]; then
+    echo "Retrieving: yaml-0.1.5"
+    wget http://pyyaml.org/download/libyaml/yaml-0.1.5.tar.gz
+    LIBYAML_ARCHIEVE=`ls yaml-*.tar.gz 2>/dev/null | tail -n 1`
+fi
+LIBYAML_ARCHIEVE_DIR=${LIBYAML_ARCHIEVE%.tar.gz}
+
+if [[ ! -d ${LIBYAML_ARCHIEVE_DIR} ]]; then
+    tar xvzf ${LIBYAML_ARCHIEVE}
+fi
+
+echo "Building libyaml"
+LIBYAML_DIR=${ROOT}/${LIBYAML_ARCHIEVE_DIR}
+pushd ${LIBYAML_DIR}
+    ./configure --prefix=${THORSANVIL_ROOT}/build/
+    make
+    echo "Installing google test"
+    make install
+popd
+
 
