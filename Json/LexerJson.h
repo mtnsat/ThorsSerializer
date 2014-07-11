@@ -12,19 +12,26 @@
 #include <FlexLexer.h>
 #endif
 
+#include "Parser/LexerParser.h"
+
 namespace ThorsAnvil
 {
+    namespace Parser
+    {
+        struct ParserInterface;
+    }
     namespace Json
     {
         
-struct ParserInterface;
-class LexerJson: public JsonBaseFlexLexer
+class LexerJson: public JsonBaseFlexLexer, public Parser::LexerParser
 {
     public:
         LexerJson(std::istream& input);
-        int yylex(ParserInterface& pi);
+        virtual int yylex(Parser::ParserInterface& pi);
 
         virtual void LexerError(const char* msg);
+        virtual std::string getString()  const;
+        virtual std::string getNumber() const;
 };
 
     }

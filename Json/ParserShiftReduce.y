@@ -6,20 +6,27 @@
 
 %{
 
-#include "ParserInterface.h"
+#include "Parser/ParserInterface.h"
 #include "LexerJson.h"
 #include <stdexcept>
 #include <sstream>
 
-using ThorsAnvil::Json::ParserInterface;
-using ThorsAnvil::Json::JsonValue;
+using ThorsAnvil::Parser::ParserInterface;
+using ThorsAnvil::Parser::ParserValue;
 
-using ThorsAnvil::Json::JsonMap;
-using ThorsAnvil::Json::JsonArray;
-using ThorsAnvil::Json::JsonMapValue;
+using ThorsAnvil::Parser::ParserMap;
+using ThorsAnvil::Parser::ParserArray;
+using ThorsAnvil::Parser::ParserMapValue;
 
 using ThorsAnvil::Json::LexerJson;
 
+namespace ThorsAnvil
+{
+    namespace Json
+    {
+int yylex(void*, LexerJson& lexer, ParserInterface& pi);
+    }
+}
 %}
 
 %parse-param {LexerJson&            lexer}
@@ -28,10 +35,10 @@ using ThorsAnvil::Json::LexerJson;
 %lex-param   {ParserInterface&      pi}
 
 %union {
-    JsonMap*                            jsonMap;
-    JsonArray*                          jsonArray;
-    JsonMapValue*                       jsonMapValue;
-    JsonValue*                          jsonValue;
+    ParserMap*                          jsonMap;
+    ParserArray*                        jsonArray;
+    ParserMapValue*                     jsonMapValue;
+    ParserValue*                        jsonValue;
     std::string*                        jsonString;
     std::string*                        jsonNumber;
 } 
@@ -114,6 +121,6 @@ void yy::ParserShiftReduce::error(yy::location const&, std::string const& msg)
     std::stringstream  extended;
     extended << msg << " -> Last Token: " << lastToken << " At line: " << lexer.lineno();
 
-    throw ThorsAnvil::Json::ParsingError(extended.str());
+    throw ThorsAnvil::Parser::ParsingError(extended.str());
 }
 

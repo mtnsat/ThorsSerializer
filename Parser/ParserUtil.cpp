@@ -1,39 +1,39 @@
 
-#include "JsonUtil.h"
+#include "ParserUtil.h"
 #include <sstream>
 
-using namespace ThorsAnvil::Json;
+using namespace ThorsAnvil::Parser;
 
 /* Forward declaration of static functions */
-static void mergeJsonDom(JsonMap&   dst, JsonMap&   src, std::string const& errorMsg, std::string const& index);
-static void mergeJsonDom(JsonArray& dst, JsonArray& src, std::string const& errorMsg, std::string const& index);
+static void mergeParserDom(ParserMap&   dst, ParserMap&   src, std::string const& errorMsg, std::string const& index);
+static void mergeParserDom(ParserArray& dst, ParserArray& src, std::string const& errorMsg, std::string const& index);
 
 
 /* Implementation */
-static void mergeJsonDom(JsonMap& dst, JsonMap& src, std::string const& errorMsg, std::string const& index)
+static void mergeParserDom(ParserMap& dst, ParserMap& src, std::string const& errorMsg, std::string const& index)
 {
-    JsonMap::iterator next;
-    for(JsonMap::iterator loop = src.begin(); loop != src.end(); loop = next)
+    ParserMap::iterator next;
+    for(ParserMap::iterator loop = src.begin(); loop != src.end(); loop = next)
     {
         next = loop;
         ++next;
-        JsonMap::iterator find = dst.find(loop->first);
+        ParserMap::iterator find = dst.find(loop->first);
         if (find == dst.end())
         {
             dst.transfer(loop, src);
         }
         else
         {
-            JsonNULLItem*   nil = dynamic_cast<JsonNULLItem*>(loop->second);
+            ParserNULLItem*   nil = dynamic_cast<ParserNULLItem*>(loop->second);
             if (nil != NULL)
             {
-                // JsonNull objects cause the node in the destination to be deleted.
+                // ParserNull objects cause the node in the destination to be deleted.
                 dst.erase(find);
                 continue;
             }
 
-            JsonMapItem*    map = dynamic_cast<JsonMapItem*>(find->second);
-            JsonArrayItem*  arr = dynamic_cast<JsonArrayItem*>(find->second);
+            ParserMapItem*    map = dynamic_cast<ParserMapItem*>(find->second);
+            ParserArrayItem*  arr = dynamic_cast<ParserArrayItem*>(find->second);
 
 
             if ((map == NULL) && (arr == NULL))
@@ -47,7 +47,7 @@ static void mergeJsonDom(JsonMap& dst, JsonMap& src, std::string const& errorMsg
             {
                 // The item in the destination is a map or an array.
                 // Check what the value we are merging into this object is
-                JsonMapItem*    srcMapItem = dynamic_cast<JsonMapItem*>(loop->second);
+                ParserMapItem*    srcMapItem = dynamic_cast<ParserMapItem*>(loop->second);
 
                 if ((map != NULL) && (srcMapItem == NULL))
                 {
@@ -63,28 +63,28 @@ static void mergeJsonDom(JsonMap& dst, JsonMap& src, std::string const& errorMsg
                 if (map != NULL) // If he destination is a map then the source must be a map
                 {
                     // Recursively combine maps.
-                    JsonMap&  dstMap    = *map->value;  
-                    JsonMap&  srcMap    = *srcMapItem->value;
+                    ParserMap&  dstMap    = *map->value;  
+                    ParserMap&  srcMap    = *srcMapItem->value;
 
-                    mergeJsonDom(dstMap, srcMap, errorMsg, index + ":" + find->first);
+                    mergeParserDom(dstMap, srcMap, errorMsg, index + ":" + find->first);
                 }
                 else if (arr != NULL)
                 {
                     // Combine stuff into an array.
-                    JsonArrayItem*    srcArrayItem = dynamic_cast<JsonArrayItem*>(loop->second);
+                    ParserArrayItem*    srcArrayItem = dynamic_cast<ParserArrayItem*>(loop->second);
 
                     if (srcArrayItem != NULL)
                     {
                         // Two arrays are concatenate together.
-                        JsonArray&  dstArray    = *arr->value;  
-                        JsonArray&  srcArray    = *srcArrayItem->value;
+                        ParserArray&  dstArray    = *arr->value;  
+                        ParserArray&  srcArray    = *srcArrayItem->value;
 
-                        mergeJsonDom(dstArray, srcArray, errorMsg, index);
+                        mergeParserDom(dstArray, srcArray, errorMsg, index);
                     }
                     else
                     {
                         // Normal Items are just append onto the end of the array
-                        JsonArray&  dstArray    = *arr->value;  
+                        ParserArray&  dstArray    = *arr->value;  
                         dstArray.push_back(src.release(loop).release());
                     }
                 }
@@ -93,19 +93,19 @@ static void mergeJsonDom(JsonMap& dst, JsonMap& src, std::string const& errorMsg
     }
 }
 
-static void mergeJsonDom(JsonArray& dst, JsonArray& src, std::string const& /*errorMsg*/, std::string const& /*index*/)
+static void mergeParserDom(ParserArray& dst, ParserArray& src, std::string const& /*errorMsg*/, std::string const& /*index*/)
 {
     dst.transfer(dst.end(), src.begin(), src.end(), src);
 }
 
-void ThorsAnvil::Json::mergeJsonDom(JsonMap& dst, JsonMap& src, std::string const& errorMsg)
+void ThorsAnvil::Parser::mergeParserDom(ParserMap& dst, ParserMap& src, std::string const& errorMsg)
 {
-    ::mergeJsonDom(dst, src, errorMsg, "root");
+    ::mergeParserDom(dst, src, errorMsg, "root");
 }
 
-void ThorsAnvil::Json::mergeJsonDom(JsonArray& dst, JsonArray& src, std::string const& errorMsg)
+void ThorsAnvil::Parser::mergeParserDom(ParserArray& dst, ParserArray& src, std::string const& errorMsg)
 {
-    ::mergeJsonDom(dst, src, errorMsg, "root");
+    ::mergeParserDom(dst, src, errorMsg, "root");
 }
 
 

@@ -2,14 +2,15 @@
 #ifndef  THORSANVIL_JSON_PARSER_SHIFT_REDUCE_H
 #define  THORSANVIL_JSON_PARSER_SHIFT_REDUCE_H
 
-#include "ParserInterface.h"
+#include "Parser/ParserInterface.h"
+#include "LexerJson.h"
 
-using ThorsAnvil::Json::ParserInterface;
-using ThorsAnvil::Json::JsonValue;
+using ThorsAnvil::Parser::ParserInterface;
+using ThorsAnvil::Parser::ParserValue;
 
-using ThorsAnvil::Json::JsonMap;
-using ThorsAnvil::Json::JsonArray;
-using ThorsAnvil::Json::JsonMapValue;
+using ThorsAnvil::Parser::ParserMap;
+using ThorsAnvil::Parser::ParserArray;
+using ThorsAnvil::Parser::ParserMapValue;
 
 using ThorsAnvil::Json::LexerJson;
 

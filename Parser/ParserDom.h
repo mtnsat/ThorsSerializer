@@ -1,67 +1,67 @@
 
-#ifndef THORSANVIL_JSON_JSON_DOM
-#define THORSANVIL_JSON_JSON_DOM
+#ifndef THORSANVIL_PARSER_PARSER_DOM
+#define THORSANVIL_PARSER_PARSER_DOM
 
-#include "JsonException.h"
+#include "ParserException.h"
 
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 
 namespace ThorsAnvil
 {
-    namespace Json
+    namespace Parser
     {
 
 /* Functions:
- * Json-Dom Object
- *      JsonValue;
- *      JsonMap;
- *      JsonArray;
+ * Parser-Dom Object
+ *      ParserValue;
+ *      ParserMap;
+ *      ParserArray;
  *
  * Internal Objects
- *      JsonValue Traits for conversion on extraction
+ *      ParserValue Traits for conversion on extraction
  *          struct ParseTrait
- *      JsonValue derived type for different internal objects:
- *          struct JsonValue
- *          struct JsonString
- *          struct JsonNumber
- *          struct JsonBool
- *          struct JsonNULL
- *          struct JsonMap
- *          struct JsonArray
+ *      ParserValue derived type for different internal objects:
+ *          struct ParserValue
+ *          struct ParserString
+ *          struct ParserNumber
+ *          struct ParserBool
+ *          struct ParserNULL
+ *          struct ParserMap
+ *          struct ParserArray
  *
  */
 
 /*
- * Classes that are used to build a DOM of a Json-Object
+ * Classes that are used to build a DOM of a Parser-Object
  */
-struct JsonValue;
-typedef boost::ptr_map<std::string, JsonValue> JsonMap;
-typedef boost::ptr_vector<JsonValue>           JsonArray;
-enum JsonObjectType { JsonMapObject, JsonArrayObject };
-struct JsonObject
+struct ParserValue;
+typedef boost::ptr_map<std::string, ParserValue> ParserMap;
+typedef boost::ptr_vector<ParserValue>           ParserArray;
+enum ParserObjectType { ParserMapObject, ParserArrayObject };
+struct ParserObject
 {
-    JsonObjectType  type;
+    ParserObjectType  type;
     union
     {
-        JsonMap*    map;
-        JsonArray*  array;
+        ParserMap*    map;
+        ParserArray*  array;
     } data;
 };
-typedef std::pair<std::unique_ptr<std::string>,std::unique_ptr<JsonValue> >     JsonMapValue;
+typedef std::pair<std::unique_ptr<std::string>,std::unique_ptr<ParserValue> >     ParserMapValue;
 
 /*
- * Json only supports three types:
+ * Parser only supports three types:
  *      String
  *      double
  *      bool
  *
  * The ParseTraits class provides a mapping from all other POD types to these basic types.
- * It is used in JsonValue::getValue() to retrieve a value of appropriate type from the
- * JsonValue object which is then converted to the type you want.
+ * It is used in ParserValue::getValue() to retrieve a value of appropriate type from the
+ * ParserValue object which is then converted to the type you want.
  *
  * e.g.
- *      int x = pv->getValue<int>(); Will get the JsonValue() internal state as a long
+ *      int x = pv->getValue<int>(); Will get the ParserValue() internal state as a long
  *                                   truncating the value towards zero. Normal long to int
  *                                   conversion will be done before returning the value
  *                                   which may overflow the value.
@@ -90,15 +90,15 @@ template<> struct ParseTrait<std::string>       { typedef std::string  GetType;}
 
 
 /*
- * The base type of all values extracted from Json
+ * The base type of all values extracted from Parser
  */
-std::ostream& operator<<(std::ostream& stream, JsonValue const& node);
-std::ostream& operator<<(std::ostream& stream, JsonMap   const& node);
-std::ostream& operator<<(std::ostream& stream, JsonArray const& node);
+std::ostream& operator<<(std::ostream& stream, ParserValue const& node);
+std::ostream& operator<<(std::ostream& stream, ParserMap   const& node);
+std::ostream& operator<<(std::ostream& stream, ParserArray const& node);
 
-struct JsonValue
+struct ParserValue
 {
-    virtual ~JsonValue()       {}
+    virtual ~ParserValue()       {}
 
     template<typename T>
     T getValue() const
@@ -107,7 +107,7 @@ struct JsonValue
         this->setValue(value);
         return value;
     }
-    virtual void print(std::ostream& /*stream*/) const {throw std::runtime_error("Invalid Json");}
+    virtual void print(std::ostream& /*stream*/) const {throw std::runtime_error("Invalid Parser");}
 
     private:
     virtual void setValue(long&)        const { throw InvalidConversion();}
@@ -115,35 +115,35 @@ struct JsonValue
     virtual void setValue(bool&)        const { throw InvalidConversion();}
     virtual void setValue(std::string&) const { throw InvalidConversion();}
 };
-struct JsonStringItem: JsonValue
+struct ParserStringItem: ParserValue
 {
     std::unique_ptr<std::string>     value;
-    JsonStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
+    ParserStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
 
     virtual void print(std::ostream& stream) const    { stream << '"' << *value << '"'; }
     private:
         virtual void setValue(std::string&       dst)  const {dst = *value;}
 };
-struct JsonNumberItem: JsonValue
+struct ParserNumberItem: ParserValue
 {
     std::unique_ptr<std::string>     value;
-    JsonNumberItem(std::unique_ptr<std::string>& data): value(std::move(data))   {}
+    ParserNumberItem(std::unique_ptr<std::string>& data): value(std::move(data))   {}
 
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
         virtual void setValue(long&         dst)  const {dst = std::atol(value->c_str());}
         virtual void setValue(double&       dst)  const {dst = std::atof(value->c_str());}
 };
-struct JsonBoolItem: JsonValue
+struct ParserBoolItem: ParserValue
 {
     bool                            value;
-    JsonBoolItem(bool data): value(data)       {}
+    ParserBoolItem(bool data): value(data)       {}
 
     virtual void print(std::ostream& stream) const    { stream << std::boolalpha << value; }
     private:
         virtual void setValue(bool&         dst)  const {dst = value;}
 };
-struct JsonNULLItem: JsonValue
+struct ParserNULLItem: ParserValue
 {
     virtual void print(std::ostream& stream) const    { stream << "null"; }
     private:
@@ -152,34 +152,34 @@ struct JsonNULLItem: JsonValue
         virtual void setValue(bool&         dst)  const {dst= false;}
         virtual void setValue(std::string&  dst)  const {dst.clear();}
 };
-struct JsonMapItem: JsonValue
+struct ParserMapItem: ParserValue
 {
-    std::unique_ptr<JsonMap>          value;
-    JsonMapItem(std::unique_ptr<JsonMap>& data): value(std::move(data))    {}
+    std::unique_ptr<ParserMap>          value;
+    ParserMapItem(std::unique_ptr<ParserMap>& data): value(std::move(data))    {}
 
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
 };
-struct JsonArrayItem: JsonValue
+struct ParserArrayItem: ParserValue
 {
-    std::unique_ptr<JsonArray>        value;
-    JsonArrayItem(std::unique_ptr<JsonArray>& data): value(std::move(data))    {}
+    std::unique_ptr<ParserArray>        value;
+    ParserArrayItem(std::unique_ptr<ParserArray>& data): value(std::move(data))    {}
 
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
 };
 
-inline std::ostream& operator<<(std::ostream& stream, JsonValue const& node)
+inline std::ostream& operator<<(std::ostream& stream, ParserValue const& node)
 {
     node.print(stream);
     return stream;
 }
-inline std::ostream& operator<<(std::ostream& stream, JsonMap const& node)
+inline std::ostream& operator<<(std::ostream& stream, ParserMap const& node)
 {
     stream << "{";
     if (!node.empty())
     {
-        JsonMap::const_iterator loop = node.begin();
+        ParserMap::const_iterator loop = node.begin();
         stream << "\"" << loop->first << "\": " << (*loop->second);
 
         for(++loop; loop != node.end(); ++loop)
@@ -191,12 +191,12 @@ inline std::ostream& operator<<(std::ostream& stream, JsonMap const& node)
 
     return stream;
 }
-inline std::ostream& operator<<(std::ostream& stream, JsonArray const& node)
+inline std::ostream& operator<<(std::ostream& stream, ParserArray const& node)
 {
     stream << "[";
     if (!node.empty())
     {
-        JsonArray::const_iterator loop = node.begin();
+        ParserArray::const_iterator loop = node.begin();
         stream << (*loop);
 
         for(++loop; loop != node.end(); ++loop)

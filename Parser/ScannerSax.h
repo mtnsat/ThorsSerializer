@@ -1,6 +1,6 @@
 
-#ifndef THORSANVIL_JSON_PARSER_SCANNER_SAX_H
-#define THORSANVIL_JSON_PARSER_SCANNER_SAX_H
+#ifndef THORSANVIL_PARSER_PARSER_SCANNER_SAX_H
+#define THORSANVIL_PARSER_PARSER_SCANNER_SAX_H
 
 #include "ParserInterface.h"
 #include <string>
@@ -10,7 +10,7 @@
 
 namespace  ThorsAnvil
 {
-    namespace Json
+    namespace Parser
     {
 
 struct Key
@@ -27,7 +27,7 @@ class ScannerSax;
 struct SaxAction
 {
     virtual ~SaxAction() {}
-    virtual void doAction(ScannerSax&, Key const& key, JsonValue const&) = 0;
+    virtual void doAction(ScannerSax&, Key const& key, ParserValue const&) = 0;
     virtual void doPreAction(ScannerSax&,Key const& key)                 = 0;
 };
 
@@ -96,8 +96,8 @@ class ScannerSax
         friend class ScannerSaxInterface;
         void    preActivate(std::string const& mapItem);
         void    preActivate(int index);
-        void    activate(std::string const& mapItem, JsonValue const& value);
-        void    activate(int index, JsonValue const& value);
+        void    activate(std::string const& mapItem, ParserValue const& value);
+        void    activate(int index, ParserValue const& value);
 
         SaxAction* getAction(std::string const& item);
         SaxAction* getAction(int index);
@@ -107,6 +107,36 @@ class ScannerSax
         void    pop_mapAction()     {mapActions.pop_front();mapActions.front().clear();++mapAction;}
         void    pop_arrAction()     {arrActions.pop_front();arrActions.front().clear();++arrAction;}
 };
+
+class ScannerSaxInterface: public ParserCleanInterface
+{
+    std::list<int> currentArrayIndex;
+    ScannerSax&     parent;
+    public:
+    ScannerSaxInterface(ScannerSax& p): parent(p)   {}
+    virtual void            mapOpen()                                           { parent.push_mapAction();}
+    virtual void            mapClose()                                          { parent.pop_mapAction();}
+    virtual std::string*    mapKeyNote(std::string* k)                          { std::unique_ptr<std::string> ak(k);                                         parent.preActivate(*ak);     return ak.release();}
+    virtual ParserMapValue* mapCreateElement(std::string* k,ParserValue* val)   { std::unique_ptr<std::string> ak(k);   std::unique_ptr<ParserValue> aval(val); parent.activate(*ak, *aval); return NULL;}
+    virtual void            arrayOpen()                                         { currentArrayIndex.push_front(0); parent.push_arrAction(); parent.preActivate(currentArrayIndex.front());}
+    virtual void            arrayClose()                                        { currentArrayIndex.pop_front();   parent.pop_arrAction();}
+    virtual ParserArray*    arrayNote(ParserArray* arr)                         { std::unique_ptr<ParserArray>   aarr(arr); parent.preActivate(currentArrayIndex.front());return NULL;}
+    virtual ParserValue*    arrayCreateElement(ParserValue* val)                { std::unique_ptr<ParserValue>   aval(val); parent.activate(currentArrayIndex.front()++, *aval);return NULL;}
+    virtual ParserValue*    valueParseString(std::string* str)                  { std::unique_ptr<std::string> astr(str); return new ParserStringItem(astr);}
+    virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
+    virtual ParserValue*    valueParseBool(bool val)                            {                                         return new ParserBoolItem(val);}
+    virtual ParserValue*    valueParseNULL()                                    {                                         return new ParserNULLItem();}
+    virtual std::string*    getStringLexer(LexerParser& lexer)                  {                                         return new std::string(lexer.getString());}
+    virtual std::string*    getNumberLexer(LexerParser& lexer)                  {                                         return new std::string(lexer.getNumber());}
+};
+template<typename Parser>
+void ScannerSax::parse(std::istream& src)
+{
+    ScannerSaxInterface     scanner(*this);
+    Parser                  parser(src, scanner);
+
+    parser.parse();
+}
 
 
     }

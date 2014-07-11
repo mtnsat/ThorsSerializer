@@ -7,7 +7,7 @@
 
 #define  IN_LEXER
 #include "ParserShiftReduce.h"
-#include "ParserInterface.h"
+#include "Parser/ParserInterface.h"
 
 %}
 
@@ -42,7 +42,7 @@ null            {return yy::ParserShiftReduce::token::JSON_NULL;}
 {NUMBER}        {return yy::ParserShiftReduce::token::JSON_NUMBER;}
 
 {WHITESPACE}    {/*IGNORE*/}
-.               {throw ThorsAnvil::Json::ParsingError("Invalid Character in Lexer");}
+.               {throw ThorsAnvil::Parser::ParsingError("Invalid Character in Lexer");}
 
 %%
 

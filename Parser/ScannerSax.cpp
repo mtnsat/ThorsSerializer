@@ -1,43 +1,12 @@
 
 
 #include "ScannerSax.h"
-#include "LexerJson.h"
-#include "ParserShiftReduce.h"
-#include "ParserRecursive.h"
+#include "LexerParser.h"
 
 #include <sstream>
 #include <list>
 
-namespace ThorsAnvil
-{
-    namespace Json
-    {
-
-class ScannerSaxInterface: public ParserCleanInterface
-{
-    std::list<int> currentArrayIndex;
-    ScannerSax&     parent;
-    public:
-    ScannerSaxInterface(ScannerSax& p): parent(p)   {}
-    virtual void            mapOpen()                                           { parent.push_mapAction();}
-    virtual void            mapClose()                                          { parent.pop_mapAction();}
-    virtual std::string*    mapKeyNote(std::string* k)                          { std::unique_ptr<std::string> ak(k);                                         parent.preActivate(*ak);     return ak.release();}
-    virtual JsonMapValue*   mapCreateElement(std::string* k,JsonValue* val)     { std::unique_ptr<std::string> ak(k);   std::unique_ptr<JsonValue> aval(val); parent.activate(*ak, *aval); return NULL;}
-    virtual void            arrayOpen()                                         { currentArrayIndex.push_front(0); parent.push_arrAction(); parent.preActivate(currentArrayIndex.front());}
-    virtual void            arrayClose()                                        { currentArrayIndex.pop_front();   parent.pop_arrAction();}
-    virtual JsonArray*      arrayNote(JsonArray* arr)                           { std::unique_ptr<JsonArray>   aarr(arr); parent.preActivate(currentArrayIndex.front());return NULL;}
-    virtual JsonValue*      arrayCreateElement(JsonValue* val)                  { std::unique_ptr<JsonValue>   aval(val); parent.activate(currentArrayIndex.front()++, *aval);return NULL;}
-    virtual JsonValue*      valueParseString(std::string* str)                  { std::unique_ptr<std::string> astr(str); return new JsonStringItem(astr);}
-    virtual JsonValue*      valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new JsonNumberItem(anum);}
-    virtual JsonValue*      valueParseBool(bool val)                            {                                         return new JsonBoolItem(val);}
-    virtual JsonValue*      valueParseNULL()                                    {                                         return new JsonNULLItem();}
-    virtual std::string*    getStringLexer(LexerJson& lexer)                    {                                         return new std::string(getString(lexer));}
-    virtual std::string*    getNumberLexer(LexerJson& lexer)                    {                                         return new std::string(getNumber(lexer));}
-};
-    }
-}
-
-using namespace ThorsAnvil::Json;
+using namespace ThorsAnvil::Parser;
 
 ScannerSax::ScannerSax()
     : mapActions(1, ScannerMapActionMap())
@@ -51,16 +20,6 @@ ScannerSax::ScannerSax()
 
 ScannerSax::~ScannerSax()
 {
-}
-
-template<typename Parser>
-void ScannerSax::parse(std::istream& src)
-{
-    ScannerSaxInterface     scanner(*this);
-    LexerJson               lexer(src);
-    Parser                  parser(lexer, scanner);
-
-    parser.parse();
 }
 
 ActionRefNote ScannerSax::registerActionOnAllMapItems(std::unique_ptr<SaxAction> action)
@@ -147,7 +106,7 @@ void ScannerSax::preActivate(int index)
     }
 }
 
-void ScannerSax::activate(std::string const& mapItem, JsonValue const& value)
+void ScannerSax::activate(std::string const& mapItem, ParserValue const& value)
 {
     SaxAction*  action = getAction(mapItem);
     if (action != NULL)
@@ -155,7 +114,7 @@ void ScannerSax::activate(std::string const& mapItem, JsonValue const& value)
         action->doAction(*this, Key(mapItem), value);
     }
 }
-void ScannerSax::activate(int index, JsonValue const& value)
+void ScannerSax::activate(int index, ParserValue const& value)
 {
     SaxAction*  action = getAction(index);
     if (action != NULL)
@@ -164,7 +123,5 @@ void ScannerSax::activate(int index, JsonValue const& value)
     }
 }
 
-template void ScannerSax::parse<yy::ParserShiftReduce>(std::istream& src);
-template void ScannerSax::parse<ThorsAnvil::Json::ParserRecursive>(std::istream& src);
 
 
