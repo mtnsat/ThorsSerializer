@@ -30,8 +30,8 @@ int ParserRecursive::JsonValueParse(int val, std::unique_ptr<Parser::ParserValue
                                                             }
                                                             return result;
                                                         }
-        case yy::ParserShiftReduce::token::JSON_STRING: value.reset(pi.valueParseString(pi.getStringLexer(lexer)));return 0;
-        case yy::ParserShiftReduce::token::JSON_NUMBER: value.reset(pi.valueParseNumber(pi.getNumberLexer(lexer)));return 0;
+        case yy::ParserShiftReduce::token::JSON_STRING: value.reset(pi.valueParseString(new std::string(lexer.getToken())));return 0;
+        case yy::ParserShiftReduce::token::JSON_NUMBER: value.reset(pi.valueParseNumber(new std::string(lexer.getToken())));return 0;
         case yy::ParserShiftReduce::token::JSON_TRUE:   value.reset(pi.valueParseBool(true));    return 0;
         case yy::ParserShiftReduce::token::JSON_FALSE:  value.reset(pi.valueParseBool(false));   return 0;
         case yy::ParserShiftReduce::token::JSON_NULL:   value.reset(pi.valueParseNULL());        return 0;
@@ -43,7 +43,7 @@ int ParserRecursive::JsonMapValueListParse(int val, std::unique_ptr<Parser::Pars
 {
     if (val == yy::ParserShiftReduce::token::JSON_STRING)
     {
-        std::unique_ptr<std::string>  key(pi.getStringLexer(lexer));
+        std::unique_ptr<std::string>  key(new std::string(lexer.getToken()));
         if ((val = yylex()) == ':')
         {
             key.reset(pi.mapKeyNote(key.release()));

@@ -101,8 +101,8 @@ JsonValue               :   JsonMap                                 {$$ = pi.val
                         |   JsonFalse                               {$$ = pi.valueParseBool(false);}
                         |   JsonNull                                {$$ = pi.valueParseNULL();}
 
-JsonString              :   JSON_STRING                             {$$ = pi.getStringLexer(lexer);}
-JsonNumber              :   JSON_NUMBER                             {$$ = pi.getNumberLexer(lexer);}
+JsonString              :   JSON_STRING                             {$$ = new std::string(lexer.getToken());}
+JsonNumber              :   JSON_NUMBER                             {$$ = new std::string(lexer.getToken());}
 JsonTrue                :   JSON_TRUE
 JsonFalse               :   JSON_FALSE
 JsonNull                :   JSON_NULL

@@ -59,8 +59,6 @@ struct ParserInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  = 0;
     virtual ParserValue*    valueParseBool(bool value)                          = 0;
     virtual ParserValue*    valueParseNULL()                                    = 0;
-    virtual std::string*    getStringLexer(LexerParser& lexer)                  = 0;
-    virtual std::string*    getNumberLexer(LexerParser& lexer)                  = 0;
     virtual int             lexResult(int val)                                  { return val;}
 };
 
@@ -88,8 +86,6 @@ struct ParseLogInterface: ParserInterface
     virtual ParserValue*    valueParseNumber(std::string*)                      {std::cout << "ParserValue: ParserNumber\n";                                    return NULL;}
     virtual ParserValue*    valueParseBool(bool)                                {std::cout << "ParserValue: ParserTrue\n";                                      return NULL;}
     virtual ParserValue*    valueParseNULL()                                    {std::cout << "ParserValue: ParserFalse\n";                                     return NULL;}
-    virtual std::string*    getStringLexer(LexerParser&)                        {std::cout << "ParserString: PARSER_STRING\n";                                return NULL;}
-    virtual std::string*    getNumberLexer(LexerParser&)                        {std::cout << "ParserNumber: PARSER_NUMBER\n";                                return NULL;}
     virtual int             lexResult(int val)                                  {std::cout << "LEX(" << val << ")\n";                                       return val;}
 };
 
@@ -117,8 +113,6 @@ struct ParserCleanInterface: ParserInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  { delete num; return NULL;}
     virtual ParserValue*    valueParseBool(bool)                                { return NULL;}
     virtual ParserValue*    valueParseNULL()                                    { return NULL;}
-    virtual std::string*    getStringLexer(LexerParser&)                        { return NULL;}
-    virtual std::string*    getNumberLexer(LexerParser&)                        { return NULL;}
 };
 
 struct ParserDomInterface: ParserCleanInterface
@@ -143,9 +137,6 @@ struct ParserDomInterface: ParserCleanInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
     virtual ParserValue*    valueParseBool(bool value)                          { return new ParserBoolItem(value);}
     virtual ParserValue*    valueParseNULL()                                    { return new ParserNULLItem();}
-
-    virtual std::string*    getStringLexer(LexerParser& lexer)                  { return new std::string(lexer.getToken());}
-    virtual std::string*    getNumberLexer(LexerParser& lexer)                  { return new std::string(lexer.getToken());}
 };
 
 
