@@ -144,8 +144,8 @@ struct ParserDomInterface: ParserCleanInterface
     virtual ParserValue*    valueParseBool(bool value)                          { return new ParserBoolItem(value);}
     virtual ParserValue*    valueParseNULL()                                    { return new ParserNULLItem();}
 
-    virtual std::string*    getStringLexer(LexerParser& lexer)                  { return new std::string(lexer.getString());}
-    virtual std::string*    getNumberLexer(LexerParser& lexer)                  { return new std::string(lexer.getNumber());}
+    virtual std::string*    getStringLexer(LexerParser& lexer)                  { return new std::string(lexer.getToken());}
+    virtual std::string*    getNumberLexer(LexerParser& lexer)                  { return new std::string(lexer.getToken());}
 };
 
 

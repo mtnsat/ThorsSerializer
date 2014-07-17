@@ -40,7 +40,7 @@ bool validateNumber(ThorsAnvil::Json::LexerJson& parser, ThorsAnvil::Parser::Par
     bool parseOK   = parser.yylex(interface) == yy::ParserShiftReduce::token::JSON_NUMBER;
     if (parseOK)
     {
-        parseOK = boost::lexical_cast<T>(parser.getNumber()) == value;
+        parseOK = boost::lexical_cast<T>(parser.getToken()) == value;
     }
     return parseOK;
 }
@@ -89,7 +89,7 @@ bool validateString(ThorsAnvil::Json::LexerJson& parser, ThorsAnvil::Parser::Par
     bool parseOK   = parser.yylex(interface) == yy::ParserShiftReduce::token::JSON_STRING;
     if (parseOK)
     {
-        parseOK = parser.getString() == value;
+        parseOK = parser.getToken() == value;
     }
     return parseOK;
 }
@@ -178,14 +178,14 @@ TEST(LexerJson, InvalidUnicodeSurogatePair)
 
 
     ASSERT_TRUE(parser.yylex(cleanInterface) == yy::ParserShiftReduce::token::JSON_STRING);
-    ASSERT_THROW(parser.getString(), ThorsAnvil::Parser::ParsingError);
+    ASSERT_THROW(parser.getToken(), ThorsAnvil::Parser::ParsingError);
 
     ASSERT_TRUE(parser.yylex(cleanInterface) == yy::ParserShiftReduce::token::JSON_STRING);
-    ASSERT_THROW(parser.getString(), ThorsAnvil::Parser::ParsingError);
+    ASSERT_THROW(parser.getToken(), ThorsAnvil::Parser::ParsingError);
 
 
     ASSERT_TRUE(parser.yylex(cleanInterface) == yy::ParserShiftReduce::token::JSON_STRING);
-    ASSERT_THROW(parser.getString(), ThorsAnvil::Parser::ParsingError);
+    ASSERT_THROW(parser.getToken(), ThorsAnvil::Parser::ParsingError);
 }
 
 TEST(LexerJson, ValidateError)

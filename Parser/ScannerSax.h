@@ -126,8 +126,8 @@ class ScannerSaxInterface: public ParserCleanInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
     virtual ParserValue*    valueParseBool(bool val)                            {                                         return new ParserBoolItem(val);}
     virtual ParserValue*    valueParseNULL()                                    {                                         return new ParserNULLItem();}
-    virtual std::string*    getStringLexer(LexerParser& lexer)                  {                                         return new std::string(lexer.getString());}
-    virtual std::string*    getNumberLexer(LexerParser& lexer)                  {                                         return new std::string(lexer.getNumber());}
+    virtual std::string*    getStringLexer(LexerParser& lexer)                  {                                         return new std::string(lexer.getToken());}
+    virtual std::string*    getNumberLexer(LexerParser& lexer)                  {                                         return new std::string(lexer.getToken());}
 };
 template<typename Parser>
 void ScannerSax::parse(std::istream& src)

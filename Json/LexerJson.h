@@ -30,8 +30,7 @@ class LexerJson: public JsonBaseFlexLexer, public Parser::LexerParser
         virtual int yylex(Parser::ParserInterface& pi);
 
         virtual void LexerError(const char* msg);
-        virtual std::string getString()  const;
-        virtual std::string getNumber() const;
+        virtual std::string getToken()  const;
 };
 
     }

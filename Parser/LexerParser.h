@@ -13,8 +13,7 @@ class LexerParser
     public:
         virtual ~LexerParser() {}
         virtual int yylex(ParserInterface& pi)   = 0;
-        virtual std::string getString() const    = 0;
-        virtual std::string getNumber() const    = 0;
+        virtual std::string getToken() const     = 0;
 
 };
 
