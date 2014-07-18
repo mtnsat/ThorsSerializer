@@ -13,46 +13,39 @@ namespace ThorsAnvil
 
 class ScannerDom
 {
-    std::unique_ptr<ParserMap>      map;
-    std::unique_ptr<ParserArray>    array;
-    ParserObjectType                objectType;
+    std::unique_ptr<ParserObject>   result;
 
     public:
     template<typename Parser>
     ParserObjectType parse(std::istream& stream);
-    std::unique_ptr<ParserMap>&     getMap()       { return map;}
-    std::unique_ptr<ParserArray>&   getArray()     { return array;}
+    ParserMap&     getMap()       { return *result->data.map;}
+    ParserArray&   getArray()     { return *result->data.array;}
+    ParserValue&   getValue()     { return *result->data.value;}
 };
 
 class ScannerDomInterface: public ParserDomInterface
 {
-    ParserObjectType&               objectTypeRef;
-    std::unique_ptr<ParserMap>&     mapRef;
-    std::unique_ptr<ParserArray>&   arrayRef;
+    std::unique_ptr<ParserObject>&  resultRef;
     public:
-    ScannerDomInterface(ParserObjectType& objectType, std::unique_ptr<ParserMap>&  map, std::unique_ptr<ParserArray>& array)
-        : objectTypeRef(objectType)
-        , mapRef(map)
-        , arrayRef(array)
+    ScannerDomInterface(std::unique_ptr<ParserObject>&  result)
+        : resultRef(result)
     {}
 
-    virtual void            doneMap(ParserMap* map)           { mapRef.reset(map);    objectTypeRef = ParserMapObject; }
-    virtual void            doneAray(ParserArray* array)      { arrayRef.reset(array);objectTypeRef = ParserArrayObject; }
+    virtual void            done(ParserObject* result)        { resultRef.reset(result);}
 };
 
 template<typename Parser>
 ParserObjectType ScannerDom::parse(std::istream& stream)
 {
-    map.release();
-    array.release();
+    result.release();
 
-    ScannerDomInterface     scanner(objectType, map, array);
+    ScannerDomInterface     scanner(result);
     Parser                  parser(stream, scanner);
 
     // If this fails it throws.
     parser.parse();
 
-    return objectType;
+    return result->type;
 }
 
     }

@@ -9,6 +9,7 @@
 
 using ThorsAnvil::Json::JsonParser;
 using ThorsAnvil::Json::JsonParserAlt;
+using ThorsAnvil::Parser::ParserMap;
 
 TEST(ScannerDom, ShiftReduceScanMapEmpty)
 {
@@ -17,8 +18,7 @@ TEST(ScannerDom, ShiftReduceScanMapEmpty)
 
     ASSERT_TRUE(scanner.parse<JsonParser>(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserMap>&  map    = scanner.getMap();
-    ASSERT_TRUE(map.get() != NULL);
+    ParserMap&  map    = scanner.getMap();
 }
 
 TEST(ScannerDom, ShiftReduceScanArrayEmpty)
@@ -28,8 +28,7 @@ TEST(ScannerDom, ShiftReduceScanArrayEmpty)
 
     ASSERT_TRUE(scanner.parse<JsonParser>(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserArray>& array = scanner.getArray();
-    ASSERT_TRUE(array.get() != NULL);
+    ParserArray& array = scanner.getArray();
 }
 
 TEST(ScannerDom, RecursiveScanMapEmpty)
@@ -39,8 +38,7 @@ TEST(ScannerDom, RecursiveScanMapEmpty)
 
     ASSERT_TRUE(scanner.parse<JsonParserAlt>(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserMap>&  map    = scanner.getMap();
-    ASSERT_TRUE(map.get() != NULL);
+    ParserMap&  map    = scanner.getMap();
 }
 
 TEST(ScannerDom, RecursiveScanArrayEmpty)
@@ -50,8 +48,7 @@ TEST(ScannerDom, RecursiveScanArrayEmpty)
 
     ASSERT_TRUE(scanner.parse<JsonParserAlt>(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserArray>& array = scanner.getArray();
-    ASSERT_TRUE(array.get() != NULL);
+    ParserArray& array = scanner.getArray();
 }
 
 
@@ -62,8 +59,7 @@ TEST(ScannerDom, ShiftReduceScanMap)
 
     ASSERT_TRUE(scanner.parse<JsonParser>(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserMap>&  map    = scanner.getMap();
-    ASSERT_TRUE(map.get() != NULL);
+    ParserMap&  map    = scanner.getMap();
 }
 
 TEST(ScannerDom, ShiftReduceScanArray)
@@ -73,8 +69,7 @@ TEST(ScannerDom, ShiftReduceScanArray)
 
     ASSERT_TRUE(scanner.parse<JsonParser>(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserArray>& array = scanner.getArray();
-    ASSERT_TRUE(array.get() != NULL);
+    ParserArray& array = scanner.getArray();
 }
 
 TEST(ScannerDom, RecursiveScanMap)
@@ -84,8 +79,7 @@ TEST(ScannerDom, RecursiveScanMap)
 
     ASSERT_TRUE(scanner.parse<JsonParserAlt>(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserMap>&  map    = scanner.getMap();
-    ASSERT_TRUE(map.get() != NULL);
+    ParserMap&  map    = scanner.getMap();
 }
 
 TEST(ScannerDom, RecursiveScanArray)
@@ -95,8 +89,7 @@ TEST(ScannerDom, RecursiveScanArray)
 
     ASSERT_TRUE(scanner.parse<JsonParserAlt>(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    std::unique_ptr<ThorsAnvil::Parser::ParserArray>& array = scanner.getArray();
-    ASSERT_TRUE(array.get() != NULL);
+    ParserArray& array = scanner.getArray();
 }
 
 

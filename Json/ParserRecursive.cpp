@@ -135,8 +135,8 @@ int ParserRecursive::parseJosnObject(int val)
     std::unique_ptr<Parser::ParserArray>    array;
     switch(val)
     {
-        case '{':   result = JsonMapParse(yylex(), map);     pi.doneMap(map.release());    return result;
-        case '[':   result = JsonArrayParse(yylex(), array); pi.doneAray(array.release()); return result;
+        case '{':   result = JsonMapParse(yylex(), map);     pi.done(new ParserObject(map.release()));    return result;
+        case '[':   result = JsonArrayParse(yylex(), array); pi.done(new ParserObject(array.release())); return result;
         default:break;
     }
     return error(val, "syntax error");

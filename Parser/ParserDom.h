@@ -38,14 +38,30 @@ namespace ThorsAnvil
 struct ParserValue;
 typedef boost::ptr_map<std::string, ParserValue> ParserMap;
 typedef boost::ptr_vector<ParserValue>           ParserArray;
-enum ParserObjectType { ParserMapObject, ParserArrayObject };
+enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject };
 struct ParserObject
 {
     ParserObjectType  type;
+    ParserObject(ParserMap* map)
+        : type(ParserMapObject)
+    {
+        data.map    = map;
+    }
+    ParserObject(ParserArray* array)
+        : type(ParserArrayObject)
+    {
+        data.array  = array;
+    }
+    ParserObject(ParserValue* value)
+        : type(ParserValueObject)
+    {
+        data.value  = value;
+    }
     union
     {
         ParserMap*    map;
         ParserArray*  array;
+        ParserValue*  value;
     } data;
 };
 typedef std::pair<std::unique_ptr<std::string>,std::unique_ptr<ParserValue> >     ParserMapValue;

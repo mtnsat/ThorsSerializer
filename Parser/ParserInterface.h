@@ -37,8 +37,7 @@ namespace ThorsAnvil
 struct ParserInterface
 {
     ~ParserInterface()  {}
-    virtual void            doneMap(ParserMap* map)                             = 0;
-    virtual void            doneAray(ParserArray* array)                        = 0;
+    virtual void            done(ParserObject* result)                          = 0;
     virtual void            mapOpen()                                           = 0;
     virtual void            mapClose()                                          = 0;
     virtual ParserMap*      mapCreate()                                         = 0;
@@ -64,8 +63,15 @@ struct ParserInterface
 
 struct ParseLogInterface: ParserInterface
 {
-    virtual void            doneMap(ParserMap*)                                 {std::cout << "ParserObject: ParserMap\n";}
-    virtual void            doneAray(ParserArray*)                              {std::cout << "ParserObject: ParserArray\n";}
+    virtual void            done(ParserObject* result)
+    {
+        switch(result->type)
+        {
+            case ParserMapObject:   std::cout << "ParserObject: ParserMap\n";   break;
+            case ParserArrayObject: std::cout << "ParserObject: ParserArray\n"; break;
+            case ParserValueObject: std::cout << "ParserObject: ParserValue\n"; break;
+        }
+    }
     virtual void            mapOpen()                                           {}
     virtual void            mapClose()                                          {std::cout << "ParserMap: { ParserMapValueListOpt }\n";}
     virtual ParserMap*      mapCreate()                                         {std::cout << "ParserMapValueListOpt: EMPTY\n";                               return NULL;}
@@ -91,8 +97,7 @@ struct ParseLogInterface: ParserInterface
 
 struct ParserCleanInterface: ParserInterface
 {
-    virtual void            doneMap(ParserMap* map)                             { delete map;}
-    virtual void            doneAray(ParserArray* array)                        { delete array;}
+    virtual void            done(ParserObject* result)                          { delete result;}
     virtual void            mapOpen()                                           {}
     virtual void            mapClose()                                          {}
     virtual ParserMap*      mapCreate()                                         { return NULL;}
