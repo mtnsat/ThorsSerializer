@@ -57,6 +57,12 @@ struct ParserObject
     {
         data.value  = value;
     }
+    ~ParserObject();
+    ParserObject(ParserObject&& move);
+    ParserObject& operator=(ParserObject&& move);
+    ParserObject(ParserObject const&)            = delete;
+    ParserObject& operator=(ParserObject const&) = delete;
+
     union
     {
         ParserMap*    map;
@@ -225,6 +231,46 @@ inline std::ostream& operator<<(std::ostream& stream, ParserArray const& node)
     return stream;
 }
 
+inline ParserObject::~ParserObject()
+{
+    switch(type)
+    {
+        case ParserMapObject:       delete data.map;    break;
+        case ParserArrayObject:     delete data.array;  break;
+        case ParserValueObject:     delete data.value;  break;
+    }
+}
+inline ParserObject::ParserObject(ParserObject&& move)
+    : type(move.type)
+{
+    switch(type)
+    {
+        case ParserMapObject:       data.map    = nullptr;  break;
+        case ParserArrayObject:     data.array  = nullptr;  break;
+        case ParserValueObject:     data.value  = nullptr;  break;
+    }
+    (*this) = std::move(move);
+}
+inline ParserObject& ParserObject::operator=(ParserObject&& move)
+{
+    if (this != &move)
+    {
+        switch(type)
+        {
+            case ParserMapObject:       delete data.map;    break;
+            case ParserArrayObject:     delete data.array;  break;
+            case ParserValueObject:     delete data.value;  break;
+        }
+        type = move.type;
+        switch(type)
+        {
+            case ParserMapObject:       std::swap(data.map,   move.data.map);   break;
+            case ParserArrayObject:     std::swap(data.array, move.data.array); break;
+            case ParserValueObject:     std::swap(data.value, move.data.value); break;
+        }
+    }
+    return *this;
+}
     }
 }
 
