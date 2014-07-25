@@ -89,12 +89,13 @@ SaxAction* ScannerSax::getAction(int index)
     return action;
 }
 
-void ScannerSax::preActivate(std::string const& mapItem)
+void ScannerSax::preActivate(ParserValue const& mapItem)
 {
-    SaxAction*  action = getAction(mapItem);
+    std::string key = mapItem.keyValue();
+    SaxAction*  action = getAction(key);
     if (action != NULL)
     {
-        action->doPreAction(*this, Key(mapItem));
+        action->doPreAction(*this, Key(key));
     }
 }
 void ScannerSax::preActivate(int index)
@@ -106,12 +107,13 @@ void ScannerSax::preActivate(int index)
     }
 }
 
-void ScannerSax::activate(std::string const& mapItem, ParserValue const& value)
+void ScannerSax::activate(ParserValue const& mapItem, ParserValue const& value)
 {
-    SaxAction*  action = getAction(mapItem);
+    std::string key = mapItem.keyValue();
+    SaxAction*  action = getAction(key);
     if (action != NULL)
     {
-        action->doAction(*this, Key(mapItem), value);
+        action->doAction(*this, Key(key), value);
     }
 }
 void ScannerSax::activate(int index, ParserValue const& value)

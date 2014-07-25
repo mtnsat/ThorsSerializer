@@ -43,7 +43,9 @@ int ParserRecursive::JsonMapValueListParse(int val, std::unique_ptr<Parser::Pars
 {
     if (val == yy::ParserShiftReduce::token::JSON_STRING)
     {
-        std::unique_ptr<std::string>  key(new std::string(lexer.getToken()));
+        std::string                           token = lexer.getToken();
+        std::unique_ptr<std::string>          keyValue(new std::string(token));
+        std::unique_ptr<Parser::ParserValue>  key(new Parser::ParserStringItem(keyValue));
         if ((val = yylex()) == ':')
         {
             key.reset(pi.mapKeyNote(key.release()));

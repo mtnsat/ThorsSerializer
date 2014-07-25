@@ -6,6 +6,7 @@
 
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
+#include <sstream>
 
 namespace ThorsAnvil
 {
@@ -70,7 +71,8 @@ struct ParserObject
         ParserValue*  value;
     } data;
 };
-typedef std::pair<std::unique_ptr<std::string>,std::unique_ptr<ParserValue> >     ParserMapValue;
+typedef std::pair<std::unique_ptr<ParserValue>,std::unique_ptr<ParserValue> >       ParserMapValue;
+typedef std::pair<std::string,std::unique_ptr<ParserValue> >                        ParserMapPair;
 
 /*
  * Parser only supports three types:
@@ -129,6 +131,7 @@ struct ParserValue
         this->setValue(value);
         return value;
     }
+    virtual std::string keyValue()      const { throw std::runtime_error("Invalid Parser");}
     virtual void print(std::ostream& /*stream*/) const {throw std::runtime_error("Invalid Parser");}
 
     private:
@@ -142,6 +145,7 @@ struct ParserStringItem: ParserValue
     std::unique_ptr<std::string>     value;
     ParserStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
 
+    virtual std::string keyValue() const              {return *value;}
     virtual void print(std::ostream& stream) const    { stream << '"' << *value << '"'; }
     private:
         virtual void setValue(std::string&       dst)  const {dst = *value;}
@@ -151,6 +155,7 @@ struct ParserNumberItem: ParserValue
     std::unique_ptr<std::string>     value;
     ParserNumberItem(std::unique_ptr<std::string>& data): value(std::move(data))   {}
 
+    virtual std::string keyValue() const              {return *value;}
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
         virtual void setValue(long&         dst)  const {dst = std::atol(value->c_str());}
@@ -161,12 +166,14 @@ struct ParserBoolItem: ParserValue
     bool                            value;
     ParserBoolItem(bool data): value(data)       {}
 
+    virtual std::string keyValue() const              {return value ? "true" : "false";}
     virtual void print(std::ostream& stream) const    { stream << std::boolalpha << value; }
     private:
         virtual void setValue(bool&         dst)  const {dst = value;}
 };
 struct ParserNULLItem: ParserValue
 {
+    virtual std::string keyValue() const              { throw std::runtime_error("Using NULL as KEY");}
     virtual void print(std::ostream& stream) const    { stream << "null"; }
     private:
         virtual void setValue(long&         dst)  const {dst= 0;}
@@ -179,6 +186,7 @@ struct ParserMapItem: ParserValue
     std::unique_ptr<ParserMap>          value;
     ParserMapItem(std::unique_ptr<ParserMap>& data): value(std::move(data))    {}
 
+    virtual std::string keyValue() const              { std::stringstream result;result << (*this);return result.str();}
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
 };
@@ -187,6 +195,7 @@ struct ParserArrayItem: ParserValue
     std::unique_ptr<ParserArray>        value;
     ParserArrayItem(std::unique_ptr<ParserArray>& data): value(std::move(data))    {}
 
+    virtual std::string keyValue() const              { std::stringstream result;result << (*this);return result.str();}
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
 };

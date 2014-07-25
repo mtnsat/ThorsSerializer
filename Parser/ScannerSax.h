@@ -94,9 +94,9 @@ class ScannerSax
 
     private:
         friend class ScannerSaxInterface;
-        void    preActivate(std::string const& mapItem);
+        void    preActivate(ParserValue const& mapItem);
         void    preActivate(int index);
-        void    activate(std::string const& mapItem, ParserValue const& value);
+        void    activate(ParserValue const& mapItem, ParserValue const& value);
         void    activate(int index, ParserValue const& value);
 
         SaxAction* getAction(std::string const& item);
@@ -116,8 +116,12 @@ class ScannerSaxInterface: public ParserCleanInterface
     ScannerSaxInterface(ScannerSax& p): parent(p)   {}
     virtual void            mapOpen()                                           { parent.push_mapAction();}
     virtual void            mapClose()                                          { parent.pop_mapAction();}
-    virtual std::string*    mapKeyNote(std::string* k)                          { std::unique_ptr<std::string> ak(k);                                         parent.preActivate(*ak);     return ak.release();}
-    virtual ParserMapValue* mapCreateElement(std::string* k,ParserValue* val)   { std::unique_ptr<std::string> ak(k);   std::unique_ptr<ParserValue> aval(val); parent.activate(*ak, *aval); return NULL;}
+    virtual ParserValue*    mapKeyNote(ParserValue* k)                          {
+                                                                                  std::unique_ptr<ParserValue> ak(k);
+                                                                                  parent.preActivate(*ak);
+                                                                                  return ak.release();
+                                                                                }
+    virtual ParserMapValue* mapCreateElement(ParserValue* k,ParserValue* val)   { std::unique_ptr<ParserValue> ak(k);   std::unique_ptr<ParserValue> aval(val); parent.activate(*ak, *aval); return NULL;}
     virtual void            arrayOpen()                                         { currentArrayIndex.push_front(0); parent.push_arrAction(); parent.preActivate(currentArrayIndex.front());}
     virtual void            arrayClose()                                        { currentArrayIndex.pop_front();   parent.pop_arrAction();}
     virtual ParserArray*    arrayNote(ParserArray* arr)                         { std::unique_ptr<ParserArray>   aarr(arr); parent.preActivate(currentArrayIndex.front());return NULL;}
