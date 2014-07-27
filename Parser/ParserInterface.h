@@ -41,7 +41,7 @@ struct ParserInterface
     virtual void            done(ParserObject* result)                          = 0;
     virtual void            mapOpen()                                           = 0;
     virtual void            mapClose()                                          = 0;
-    virtual std::string     mapValueToKey(ParserValue* key)                     = 0;
+    virtual std::string     mapValueToKey(ParserValue& key)                     = 0;
     virtual ParserMap*      mapCreate()                                         = 0;
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      = 0;
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      = 0;
@@ -76,7 +76,7 @@ struct ParseLogInterface: ParserInterface
     }
     virtual void            mapOpen()                                           {}
     virtual void            mapClose()                                          {std::cout << "ParserMap: { ParserMapValueListOpt }\n";}
-    virtual std::string     mapValueToKey(ParserValue*)                         {std::cout << "ParserValue -> MapKey\n";                                      return "";}
+    virtual std::string     mapValueToKey(ParserValue&)                         {std::cout << "ParserValue -> MapKey\n";                                      return "";}
     virtual ParserMap*      mapCreate()                                         {std::cout << "ParserMapValueListOpt: EMPTY\n";                               return NULL;}
     virtual ParserMap*      mapCreate(ParserMapValue*)                          {std::cout << "ParserMapValueList: ParserMapValue\n";                           return NULL;}
     virtual ParserMap*      mapAppend(ParserMap*, ParserMapValue*)              {std::cout << "ParserMapValueList: ParserMapValueList , ParserMapValue\n";        return NULL;}
@@ -103,7 +103,7 @@ struct ParserCleanInterface: ParserInterface
     virtual void            done(ParserObject* result)                          { delete result;}
     virtual void            mapOpen()                                           {}
     virtual void            mapClose()                                          {}
-    virtual std::string     mapValueToKey(ParserValue* key)                     { delete key; return "";}
+    virtual std::string     mapValueToKey(ParserValue&)                         { return "";}
     virtual ParserMap*      mapCreate()                                         { return NULL;}
     virtual ParserMap*      mapCreate(ParserMapValue* val)                        { delete val; return NULL;}
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)          { std::unique_ptr<ParserMapValue> aval(val); delete map; return NULL;}
@@ -126,23 +126,20 @@ struct ParserCleanInterface: ParserInterface
 
 struct ParserDomInterface: ParserCleanInterface
 {
-    virtual std::string     mapValueToKey(ParserValue* key)                     {
-                                                                                  std::unique_ptr<ParserValue>      uk(key);
-                                                                                  return uk->keyValue();
+    virtual std::string     mapValueToKey(ParserValue& key)                     {
+                                                                                  return key.keyValue();
                                                                                 }
     virtual ParserMap*      mapCreate()                                         { return new ParserMap();}
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      {
                                                                                   std::unique_ptr<ParserMapValue>   aval(val);
                                                                                   std::unique_ptr<ParserMap>        amap(new ParserMap());
-                                                                                  std::string                       key(mapValueToKey(aval->first.release()));
-                                                                                  amap->insert(key, aval->second.release());
+                                                                                  amap->insert(*this, std::move(aval->first), std::move(aval->second));
                                                                                   return amap.release();
                                                                                 }
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      {
                                                                                   std::unique_ptr<ParserMapValue>   aval(val);
                                                                                   std::unique_ptr<ParserMap>        amap(map);
-                                                                                  std::string                       key(mapValueToKey(aval->first.release()));
-                                                                                  amap->insert(key, aval->second.release());
+                                                                                  amap->insert(*this, std::move(aval->first), std::move(aval->second));
                                                                                   return amap.release();
                                                                                 }
     virtual ParserMapValue* mapCreateElement(ParserValue* k,ParserValue* val)   { std::unique_ptr<ParserValue>  aval(val);std::unique_ptr<ParserValue> ak(k);

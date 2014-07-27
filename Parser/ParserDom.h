@@ -37,7 +37,37 @@ namespace ThorsAnvil
  * Classes that are used to build a DOM of a Parser-Object
  */
 struct ParserValue;
-typedef boost::ptr_map<std::string, ParserValue> ParserMap;
+struct ParserInterface;
+//typedef boost::ptr_map<std::string, ParserValue> ParserMap;
+class ParserMap
+{
+    typedef boost::ptr_map<std::string, ParserValue> Storage; 
+    Storage     mapData;
+    Storage     keyData;
+
+    public:
+        typedef Storage::const_iterator     const_iterator;
+        typedef Storage::iterator           iterator;
+
+        bool            empty() const               {return mapData.empty();}
+        std::size_t     size()  const               {return mapData.size();}
+        iterator        find(std::string const& key){return mapData.find(key);}
+        const_iterator  begin() const               {return mapData.begin();}
+        const_iterator  end()   const               {return mapData.end();}
+        iterator        begin()                     {return mapData.begin();}
+        iterator        end()                       {return mapData.end();}
+
+        void                          insert(ParserInterface& pi, std::unique_ptr<ParserValue>&& key, std::unique_ptr<ParserValue>&& value);
+        std::unique_ptr<ParserValue>  release(iterator);
+
+        void            transfer(iterator, ParserMap&);
+        void            erase(iterator);
+        ParserValue&        operator[](std::string const& key)          {return mapData[key];}
+        friend std::ostream& operator<<(std::ostream& stream, ParserMap const& node);
+};
+
+
+
 typedef boost::ptr_vector<ParserValue>           ParserArray;
 enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject };
 struct ParserObject
@@ -210,12 +240,14 @@ inline std::ostream& operator<<(std::ostream& stream, ParserMap const& node)
     stream << "{";
     if (!node.empty())
     {
-        ParserMap::const_iterator loop = node.begin();
-        stream << "\"" << loop->first << "\": " << (*loop->second);
+        ParserMap::const_iterator loopK = node.keyData.begin();
+        ParserMap::const_iterator loopV = node.mapData.begin();
 
-        for(++loop; loop != node.end(); ++loop)
+        stream << (*loopK->second) << ": " << (*loopV->second);
+
+        for(++loopK, ++loopV; loopV != node.mapData.end(); ++loopK, ++loopV)
         {
-            stream << ", \"" << loop->first << "\": " << (*loop->second);
+            stream << ", " << (*loopK->second) << ": " << (*loopV->second);
         }
     }
     stream << "}";
