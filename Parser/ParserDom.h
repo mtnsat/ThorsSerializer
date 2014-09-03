@@ -16,10 +16,6 @@ namespace ThorsAnvil
 
 /* Functions:
  *
- * ParserObject             // The result of a parse is held in one of these.
- *                          // Useful for passing around the result of parsing.
- *                          // You can distinguish between the two structure types.
- *                          // and the scalar type (ParserValue)
  *      ParserValue;
  *      ParserMap;
  *      ParserArray;
