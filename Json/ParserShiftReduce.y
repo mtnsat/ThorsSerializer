@@ -14,11 +14,12 @@
 using ThorsAnvil::Parser::ParserInterface;
 using ThorsAnvil::Parser::ParserValue;
 
-using ThorsAnvil::Parser::ParserObject;
 using ThorsAnvil::Parser::ParserStringItem;
 using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
 using ThorsAnvil::Parser::ParserMapValue;
+using ThorsAnvil::Parser::ParserMapItem;
+using ThorsAnvil::Parser::ParserArrayItem;
 
 using ThorsAnvil::Json::LexerJson;
 
@@ -72,8 +73,8 @@ int yylex(void*, LexerJson& lexer, ParserInterface& pi);
 
 JsonData                :   JsonObject                              {return 0;}
 
-JsonObject              :   JsonMap                                 {pi.done(new ParserObject($1));}
-                        |   JsonArray                               {pi.done(new ParserObject($1));}
+JsonObject              :   JsonMap                                 {std::unique_ptr<ParserMap>     map($1);pi.done(ThorsAnvil::Parser::ParserMapObject,   new ParserMapItem(map));}
+                        |   JsonArray                               {std::unique_ptr<ParserArray>   arr($1);pi.done(ThorsAnvil::Parser::ParserArrayObject, new ParserArrayItem(arr));}
 
 JsonMap                 :   '{'                                     {pi.mapOpen();}
                             JsonMapValueListOpt

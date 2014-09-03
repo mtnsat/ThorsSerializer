@@ -4,7 +4,6 @@
 #include <boost/lexical_cast.hpp>
 
 using namespace ThorsAnvil::Yaml;
-using ThorsAnvil::Parser::ParserObject;
 using ThorsAnvil::Parser::ParserValue;
 using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
@@ -326,7 +325,6 @@ void YamlParser::addToken(Parser::ParserObjectType type, std::unique_ptr<ParserV
     // std::cout << "addToken()\n";
     if (hierarchy.size() == 0)
     {
-        std::unique_ptr<ParserObject>   doneToken;
         switch(type)
         {
             case Parser::ParserMapObject:
@@ -334,8 +332,7 @@ void YamlParser::addToken(Parser::ParserObjectType type, std::unique_ptr<ParserV
                 std::unique_ptr<ParserMapItem>  mapItem(dynamic_cast<ParserMapItem*>(token.release()));
                 if (mapItem.get())
                 {
-                    std::unique_ptr<ParserMap>      map(std::move(mapItem->value));
-                    doneToken.reset(new ParserObject(map.release()));
+                    pi.done(Parser::ParserMapObject, mapItem.release());
                 }
                 break;
             }
@@ -344,19 +341,17 @@ void YamlParser::addToken(Parser::ParserObjectType type, std::unique_ptr<ParserV
                 std::unique_ptr<ParserArrayItem>  arrayItem(dynamic_cast<ParserArrayItem*>(token.release()));
                 if (arrayItem.get())
                 {
-                    std::unique_ptr<ParserArray>      array(std::move(arrayItem->value));
-                    doneToken.reset(new ParserObject(array.release()));
+                    pi.done(Parser::ParserArrayObject, arrayItem.release());
                 }
                 break;
             }
             case Parser::ParserValueObject:
             {
-                doneToken.reset(new ParserObject(token.release()));
+                pi.done(Parser::ParserValueObject, token.release());
                 break;
             }
             default:    throw std::runtime_error("Invalid Object type");
         }
-        pi.done(doneToken.release());
         return;
     }
     // std::cout << "Size: " << hierarchy.size() << "\n";
@@ -420,11 +415,66 @@ int YamlParser::yylex(Parser::ParserInterface& /*pi*/)
 {
     return 1;
 }
+
+YamlObject::~YamlObject()
+{
+    switch(type)
+    {
+        case Parser::ParserMapObject:       delete data.map;    break;
+        case Parser::ParserArrayObject:     delete data.array;  break;
+        case Parser::ParserValueObject:     delete data.value;  break;
+        default:                                                break;
+    }
+}
+YamlObject::YamlObject(YamlObject&& move)
+    : type(move.type)
+{
+    switch(type)
+    {
+        case Parser::ParserMapObject:       data.map    = nullptr;  break;
+        case Parser::ParserArrayObject:     data.array  = nullptr;  break;
+        case Parser::ParserValueObject:     data.value  = nullptr;  break;
+        default:                                                    break;
+    }
+    (*this) = std::move(move);
+}
+YamlObject& YamlObject::operator=(YamlObject&& move)
+{
+    if (this != &move)
+    {
+        if (type != move.type)
+        {
+            switch(type)
+            {
+                case Parser::ParserMapObject:       delete data.map;    break;
+                case Parser::ParserArrayObject:     delete data.array;  break;
+                case Parser::ParserValueObject:     delete data.value;  break;
+                default:                                                break;
+            }
+            type = move.type;
+            switch(type)
+            {
+                case Parser::ParserMapObject:       data.map    = nullptr;  break;
+                case Parser::ParserArrayObject:     data.array  = nullptr;  break;
+                case Parser::ParserValueObject:     data.value  = nullptr;  break;
+                default:                                                    break;
+            }
+        }
+        switch(type)
+        {
+            case Parser::ParserMapObject:       std::swap(data.map,   move.data.map);   break;
+            case Parser::ParserArrayObject:     std::swap(data.array, move.data.array); break;
+            case Parser::ParserValueObject:     std::swap(data.value, move.data.value); break;
+            default:                                                                    break;
+        }
+    }
+    return *this;
+}
 /*
 struct ParserInterface
 {
     ~ParserInterface()  {}
-    virtual void            done(ParserObject* result)                          = 0;
+    virtual void            done(YamlObject* result)                          = 0;
     virtual void            mapOpen()                                           = 0; *
     virtual void            mapClose()                                          = 0; *
     virtual std::string     mapValueToKey(ParserValue& key)                     = 0;

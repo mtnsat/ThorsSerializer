@@ -11,11 +11,46 @@ namespace ThorsAnvil
     namespace Yaml
     {
 
+struct YamlObject
+{
+    YamlObject()
+        : type(Parser::NotSet)
+    {}
+    YamlObject(Parser::ParserMap* map)
+        : type(Parser::ParserMapObject)
+    {
+        data.map    = map;
+    }
+    YamlObject(Parser::ParserArray* array)
+        : type(Parser::ParserArrayObject)
+    {
+        data.array  = array;
+    }
+    YamlObject(Parser::ParserValue* value)
+        : type(Parser::ParserValueObject)
+    {
+        data.value  = value;
+    }
+    ~YamlObject();
+    YamlObject(YamlObject&& move);
+    YamlObject& operator=(YamlObject&& move);
+    YamlObject(YamlObject const&)            = delete;
+    YamlObject& operator=(YamlObject const&) = delete;
+
+    Parser::ParserObjectType  type;
+    union
+    {
+        Parser::ParserMap*    map;
+        Parser::ParserArray*  array;
+        Parser::ParserValue*  value;
+    } data;
+};
+
 class YamlParser: public Parser::LexerParser
 {
     struct YamlHierarchyObject
     {
-        Parser::ParserObject                    obj;
+        YamlObject                            obj;
         bool                                    set;
         bool                                    first;
         std::unique_ptr<Parser::ParserValue>    key;

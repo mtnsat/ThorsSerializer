@@ -25,23 +25,10 @@ std::string getExpected(std::string const& file)
 void CheckResults(YamlParser& parser, ParserDomInterface& domBuilder, ParserObjectType type, std::string const& expectedResult)
 {
     ASSERT_EQ(0, parser.parse());
-    ASSERT_EQ(domBuilder.result.type, type);
+    ASSERT_EQ(domBuilder.type, type);
 
     std::stringstream result;
-    switch(type)
-    {
-        case ThorsAnvil::Parser::ParserMapObject:
-            result << (*domBuilder.result.data.map);
-            break;
-        case ThorsAnvil::Parser::ParserArrayObject:
-            result << (*domBuilder.result.data.array);
-            break;
-        case ThorsAnvil::Parser::ParserValueObject:
-            result << (*domBuilder.result.data.value);
-            break;
-        default:
-            break;
-    }
+    result << (*domBuilder.result);
     ASSERT_EQ(expectedResult, result.str());
 }
 

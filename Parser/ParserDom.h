@@ -15,7 +15,11 @@ namespace ThorsAnvil
     {
 
 /* Functions:
- * Parser-Dom Object
+ *
+ * ParserObject             // The result of a parse is held in one of these.
+ *                          // Useful for passing around the result of parsing.
+ *                          // You can distinguish between the two structure types.
+ *                          // and the scalar type (ParserValue)
  *      ParserValue;
  *      ParserMap;
  *      ParserArray;
@@ -23,14 +27,14 @@ namespace ThorsAnvil
  * Internal Objects
  *      ParserValue Traits for conversion on extraction
  *          struct ParseTrait
- *      ParserValue derived type for different internal objects:
- *          struct ParserValue
- *          struct ParserString
- *          struct ParserNumber
- *          struct ParserBool
- *          struct ParserNULL
- *          struct ParserMapItem
- *          struct ParserArrayItem
+ *
+ *      ParserValue             Base Class.
+ *          ParserStringItem:   ParserValue
+ *          ParserNumberItem:   ParserValue
+ *          ParserBoolItem:     ParserValue
+ *          ParserNULLItem:     ParserValue
+ *          ParserMapItem:      ParserValue     Holds a ParserMap
+ *          ParserArrayItem:    ParserValue     Holds a ParserArray
  *
  */
 
@@ -70,41 +74,6 @@ class ParserMap
 
 
 typedef boost::ptr_vector<ParserValue>           ParserArray;
-enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject, NotSet };
-struct ParserObject
-{
-    ParserObject()
-        : type(NotSet)
-    {}
-    ParserObject(ParserMap* map)
-        : type(ParserMapObject)
-    {
-        data.map    = map;
-    }
-    ParserObject(ParserArray* array)
-        : type(ParserArrayObject)
-    {
-        data.array  = array;
-    }
-    ParserObject(ParserValue* value)
-        : type(ParserValueObject)
-    {
-        data.value  = value;
-    }
-    ~ParserObject();
-    ParserObject(ParserObject&& move);
-    ParserObject& operator=(ParserObject&& move);
-    ParserObject(ParserObject const&)            = delete;
-    ParserObject& operator=(ParserObject const&) = delete;
-
-    ParserObjectType  type;
-    union
-    {
-        ParserMap*    map;
-        ParserArray*  array;
-        ParserValue*  value;
-    } data;
-};
 typedef std::pair<std::unique_ptr<ParserValue>,std::unique_ptr<ParserValue> >       ParserMapValue;
 typedef std::pair<std::string,std::unique_ptr<ParserValue> >                        ParserMapPair;
 
@@ -298,60 +267,6 @@ inline std::ostream& operator<<(std::ostream& stream, ParserArray const& node)
     return stream;
 }
 
-inline ParserObject::~ParserObject()
-{
-    switch(type)
-    {
-        case ParserMapObject:       delete data.map;    break;
-        case ParserArrayObject:     delete data.array;  break;
-        case ParserValueObject:     delete data.value;  break;
-        default:                                        break;
-    }
-}
-inline ParserObject::ParserObject(ParserObject&& move)
-    : type(move.type)
-{
-    switch(type)
-    {
-        case ParserMapObject:       data.map    = nullptr;  break;
-        case ParserArrayObject:     data.array  = nullptr;  break;
-        case ParserValueObject:     data.value  = nullptr;  break;
-        default:                                            break;
-    }
-    (*this) = std::move(move);
-}
-inline ParserObject& ParserObject::operator=(ParserObject&& move)
-{
-    if (this != &move)
-    {
-        if (type != move.type)
-        {
-            switch(type)
-            {
-                case ParserMapObject:       delete data.map;    break;
-                case ParserArrayObject:     delete data.array;  break;
-                case ParserValueObject:     delete data.value;  break;
-                default:                                        break;
-            }
-            type = move.type;
-            switch(type)
-            {
-                case ParserMapObject:       data.map    = nullptr;  break;
-                case ParserArrayObject:     data.array  = nullptr;  break;
-                case ParserValueObject:     data.value  = nullptr;  break;
-                default:                                            break;
-            }
-        }
-        switch(type)
-        {
-            case ParserMapObject:       std::swap(data.map,   move.data.map);   break;
-            case ParserArrayObject:     std::swap(data.array, move.data.array); break;
-            case ParserValueObject:     std::swap(data.value, move.data.value); break;
-            default:                                                            break;
-        }
-    }
-    return *this;
-}
     }
 }
 

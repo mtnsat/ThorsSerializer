@@ -26,11 +26,13 @@ namespace ThorsAnvil
  *
  * Interface for Parsing
  *      struct ParserInterface
- *      struct ParserLogInterface   (generated debug output)
  *      struct ParserCleanInterface
+ *      struct ParserLogInterface   (template that sits in-front of another interface to log calls.)
  *      struct ParserDomInterface
  *
  */
+
+enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject, NotSet };
 
 /*
  * The interface injected into the parser that will do the work.
@@ -38,7 +40,7 @@ namespace ThorsAnvil
 struct ParserInterface
 {
     ~ParserInterface()  {}
-    virtual void            done(ParserObject* result)                          = 0;
+    virtual void            done(ParserObjectType type, ParserValue* result)    = 0;
     virtual void            mapOpen()                                           = 0;
     virtual void            mapClose()                                          = 0;
     virtual std::string     mapValueToKey(ParserValue& key)                     = 0;
@@ -66,20 +68,20 @@ struct ParserInterface
 
 struct ParserCleanInterface: ParserInterface
 {
-    virtual void            done(ParserObject* result)                          { delete result;}
+    virtual void            done(ParserObjectType, ParserValue* result)         { delete result;}
     virtual void            mapOpen()                                           {}
     virtual void            mapClose()                                          {}
     virtual std::string     mapValueToKey(ParserValue&)                         { return "";}
     virtual ParserMap*      mapCreate()                                         { return NULL;}
-    virtual ParserMap*      mapCreate(ParserMapValue* val)                        { delete val; return NULL;}
-    virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)          { std::unique_ptr<ParserMapValue> aval(val); delete map; return NULL;}
-    virtual ParserMapValue* mapCreateElement(ParserValue* k,ParserValue* val)     { std::unique_ptr<ParserValue> aval(val); delete k;   return NULL;}
+    virtual ParserMap*      mapCreate(ParserMapValue* val)                      { delete val; return NULL;}
+    virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      { std::unique_ptr<ParserMapValue> aval(val); delete map; return NULL;}
+    virtual ParserMapValue* mapCreateElement(ParserValue* k,ParserValue* val)   { std::unique_ptr<ParserValue> aval(val);    delete k;   return NULL;}
     virtual ParserValue*    mapKeyNote(ParserValue* k)                          { delete k; return NULL;}
     virtual void            arrayOpen()                                         {}
     virtual void            arrayClose()                                        {}
     virtual ParserArray*    arrayCreate()                                       { return NULL;}
     virtual ParserArray*    arrayCreate(ParserValue* val)                       { delete val; return NULL;}
-    virtual ParserArray*    arrayAppend(ParserArray* arr, ParserValue* val)     { std::unique_ptr<ParserArray> aarr(arr); delete val; return NULL;}
+    virtual ParserArray*    arrayAppend(ParserArray* arr, ParserValue* val)     { std::unique_ptr<ParserArray> aarr(arr);    delete val; return NULL;}
     virtual ParserArray*    arrayNote(ParserArray* arr)                         { delete arr; return NULL;}
     virtual ParserValue*    arrayCreateElement(ParserValue* val)                { delete val; return NULL;}
     virtual ParserValue*    valueParseMap(ParserMap* map)                       { delete map; return NULL;}
@@ -95,11 +97,11 @@ template<typename T = ParserCleanInterface>
 struct ParserLogInterface: ParserInterface
 {
     T   actualInterface;
-    virtual void            done(ParserObject* result)
+    virtual void            done(ParserObjectType type, ParserValue* result)
     {
         if (result)
         {
-            switch(result->type)
+            switch(type)
             {
                 case ParserMapObject:   std::cout << "ParserObject: ParserMap\n";   break;
                 case ParserArrayObject: std::cout << "ParserObject: ParserArray\n"; break;
@@ -111,7 +113,7 @@ struct ParserLogInterface: ParserInterface
         {
             std::cout << "ParserObject: NULL\n";
         }
-        actualInterface.done(result);
+        actualInterface.done(type, result);
     }
     template<typename ...Args>
     ParserLogInterface(Args&&... args)
@@ -179,12 +181,16 @@ struct ParserDomInterface: ParserCleanInterface
     virtual ParserValue*    valueParseBool(bool value)                          { return new ParserBoolItem(value);}
     virtual ParserValue*    valueParseNULL(bool okKey = false)                  { return new ParserNULLItem(okKey);}
 
-    ParserObject result;
+    ParserObjectType                type;
+    std::unique_ptr<ParserValue>    result;
 
-    virtual void            done(ParserObject* output)
+    ParserDomInterface()
+        : type(NotSet)
+    {}
+    virtual void            done(ParserObjectType valueType, ParserValue* value)
     {
-        result  = std::move(*output);
-        delete output;
+        type    = valueType;
+        result.reset(value);
     }
 };
 

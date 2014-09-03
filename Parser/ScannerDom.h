@@ -13,14 +13,15 @@ namespace ThorsAnvil
 
 class ScannerDom
 {
-    std::unique_ptr<ParserObject>   result;
+    ParserObjectType                type;
+    std::unique_ptr<ParserValue>    result;
 
-    void validate(ParserObjectType type)
+    void validate(ParserObjectType valueType)
     {
         if (result.get() == nullptr)
         {   throw std::runtime_error("Invalid Type: No result set");
         }
-        if (result->type != type)
+        if (type != valueType)
         {   throw std::runtime_error("Invalid Type: Different result set by parser");
         }
     }
@@ -28,20 +29,22 @@ class ScannerDom
     public:
     template<typename Parser>
     ParserObjectType parse(std::istream& stream);
-    ParserMap&     getMap()       { validate(ParserMapObject);  return *result->data.map;}
-    ParserArray&   getArray()     { validate(ParserArrayObject);return *result->data.array;}
-    ParserValue&   getValue()     { validate(ParserValueObject);return *result->data.value;}
+    ParserMap&     getMap()       { validate(ParserMapObject);  return *(static_cast<ParserMapItem&>(*result).value);}
+    ParserArray&   getArray()     { validate(ParserArrayObject);return *(static_cast<ParserArrayItem&>(*result).value);}
+    ParserValue&   getValue()     { validate(ParserValueObject);return *result;}
 };
 
 class ScannerDomInterface: public ParserDomInterface
 {
-    std::unique_ptr<ParserObject>&  resultRef;
+    ParserObjectType&               type;
+    std::unique_ptr<ParserValue>&   resultRef;
     public:
-    ScannerDomInterface(std::unique_ptr<ParserObject>&  result)
-        : resultRef(result)
+    ScannerDomInterface(ParserObjectType& type, std::unique_ptr<ParserValue>&  result)
+        : type(type)
+        , resultRef(result)
     {}
 
-    virtual void            done(ParserObject* result)        { resultRef.reset(result);}
+    virtual void            done(ParserObjectType valueType, ParserValue* result)        { type = valueType; resultRef.reset(result);}
 };
 
 template<typename Parser>
@@ -49,13 +52,13 @@ ParserObjectType ScannerDom::parse(std::istream& stream)
 {
     result.release();
 
-    ScannerDomInterface     scanner(result);
+    ScannerDomInterface     scanner(type, result);
     Parser                  parser(stream, scanner);
 
     // If this fails it throws.
     parser.parse();
 
-    return result->type;
+    return type;
 }
 
     }
