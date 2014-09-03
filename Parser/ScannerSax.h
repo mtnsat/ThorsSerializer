@@ -84,7 +84,7 @@ class ScannerSax
     public:
         ~ScannerSax();
          ScannerSax();
-        template<typename Parser>
+        template<typename Parser, typename Interface = ScannerSaxInterface>
         void            parse(std::istream& src);
         ActionRefNote   registerAction(std::string const& mapItem, std::unique_ptr<SaxAction> action);
         ActionRefNote   registerActionNext(std::unique_ptr<SaxAction> action);
@@ -127,15 +127,16 @@ class ScannerSaxInterface: public ParserCleanInterface
     virtual ParserArray*    arrayNote(ParserArray* arr)                         { std::unique_ptr<ParserArray>   aarr(arr); parent.preActivate(currentArrayIndex.front());return NULL;}
     virtual ParserValue*    arrayCreateElement(ParserValue* val)                { std::unique_ptr<ParserValue>   aval(val); parent.activate(currentArrayIndex.front()++, *aval);return NULL;}
     virtual ParserValue*    valueParseString(std::string* str)                  { std::unique_ptr<std::string> astr(str); return new ParserStringItem(astr);}
+    virtual ParserValue*    valueParseNumber(int b, int o, std::string* num)    { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(b, o, anum);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
     virtual ParserValue*    valueParseBool(bool val)                            {                                         return new ParserBoolItem(val);}
-    virtual ParserValue*    valueParseNULL()                                    {                                         return new ParserNULLItem();}
+    virtual ParserValue*    valueParseNULL(bool okKey = false)                  {                                         return new ParserNULLItem(okKey);}
 };
-template<typename Parser>
+template<typename Parser, typename Interface>
 void ScannerSax::parse(std::istream& src)
 {
-    ScannerSaxInterface     scanner(*this);
-    Parser                  parser(src, scanner);
+    Interface     scanner(*this);
+    Parser        parser(src, scanner);
 
     parser.parse();
 }

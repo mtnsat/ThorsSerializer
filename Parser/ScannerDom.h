@@ -15,12 +15,22 @@ class ScannerDom
 {
     std::unique_ptr<ParserObject>   result;
 
+    void validate(ParserObjectType type)
+    {
+        if (result.get() == nullptr)
+        {   throw std::runtime_error("Invalid Type: No result set");
+        }
+        if (result->type != type)
+        {   throw std::runtime_error("Invalid Type: Different result set by parser");
+        }
+    }
+
     public:
     template<typename Parser>
     ParserObjectType parse(std::istream& stream);
-    ParserMap&     getMap()       { return *result->data.map;}
-    ParserArray&   getArray()     { return *result->data.array;}
-    ParserValue&   getValue()     { return *result->data.value;}
+    ParserMap&     getMap()       { validate(ParserMapObject);  return *result->data.map;}
+    ParserArray&   getArray()     { validate(ParserArrayObject);return *result->data.array;}
+    ParserValue&   getValue()     { validate(ParserValueObject);return *result->data.value;}
 };
 
 class ScannerDomInterface: public ParserDomInterface

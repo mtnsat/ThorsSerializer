@@ -57,45 +57,11 @@ struct ParserInterface
     virtual ParserValue*    valueParseMap(ParserMap* map)                       = 0;
     virtual ParserValue*    valueParseArray(ParserArray* arr)                   = 0;
     virtual ParserValue*    valueParseString(std::string* str)                  = 0;
+    virtual ParserValue*    valueParseNumber(int base, int off, std::string* n) = 0;
     virtual ParserValue*    valueParseNumber(std::string* num)                  = 0;
     virtual ParserValue*    valueParseBool(bool value)                          = 0;
-    virtual ParserValue*    valueParseNULL()                                    = 0;
+    virtual ParserValue*    valueParseNULL(bool okKey = false)                  = 0;
     virtual int             lexResult(int val)                                  { return val;}
-};
-
-struct ParseLogInterface: ParserInterface
-{
-    virtual void            done(ParserObject* result)
-    {
-        switch(result->type)
-        {
-            case ParserMapObject:   std::cout << "ParserObject: ParserMap\n";   break;
-            case ParserArrayObject: std::cout << "ParserObject: ParserArray\n"; break;
-            case ParserValueObject: std::cout << "ParserObject: ParserValue\n"; break;
-        }
-    }
-    virtual void            mapOpen()                                           {}
-    virtual void            mapClose()                                          {std::cout << "ParserMap: { ParserMapValueListOpt }\n";}
-    virtual std::string     mapValueToKey(ParserValue&)                         {std::cout << "ParserValue -> MapKey\n";                                      return "";}
-    virtual ParserMap*      mapCreate()                                         {std::cout << "ParserMapValueListOpt: EMPTY\n";                               return NULL;}
-    virtual ParserMap*      mapCreate(ParserMapValue*)                          {std::cout << "ParserMapValueList: ParserMapValue\n";                           return NULL;}
-    virtual ParserMap*      mapAppend(ParserMap*, ParserMapValue*)              {std::cout << "ParserMapValueList: ParserMapValueList , ParserMapValue\n";        return NULL;}
-    virtual ParserMapValue* mapCreateElement(ParserValue*,ParserValue*)         {std::cout << "ParserMapValue: PARSER_STRING : ParserValue\n";                  return NULL;}
-    virtual ParserValue*    mapKeyNote(ParserValue*)                            {                                                                           return NULL;}
-    virtual void            arrayOpen()                                         {}
-    virtual void            arrayClose()                                        {std::cout << "ParserArray: [ ParserArrayValueListOpt ]\n";}
-    virtual ParserArray*    arrayCreate()                                       {std::cout << "ParserArrayValueListOpt: EMPTY\n";                             return NULL;}
-    virtual ParserArray*    arrayCreate(ParserValue*)                           {std::cout << "ParserArrayValueList: ParserArrayValue\n";                       return NULL;}
-    virtual ParserArray*    arrayAppend(ParserArray*, ParserValue*)             {std::cout << "ParserArrayValueList: ParserArrayListItem ParserArrayValue\n";     return NULL;}
-    virtual ParserArray*    arrayNote(ParserArray*)                             {std::cout << "ParserArrayListItem: ParserArrayValueList ','";                  return NULL;}
-    virtual ParserValue*    arrayCreateElement(ParserValue*)                    {std::cout << "ParserArrayValue: ParserValue\n";                                return NULL;}
-    virtual ParserValue*    valueParseMap(ParserMap*)                           {std::cout << "ParserValue: ParserMap\n";                                       return NULL;}
-    virtual ParserValue*    valueParseArray(ParserArray*)                       {std::cout << "ParserValue: ParserArray\n";                                     return NULL;}
-    virtual ParserValue*    valueParseString(std::string*)                      {std::cout << "ParserValue: ParserString\n";                                    return NULL;}
-    virtual ParserValue*    valueParseNumber(std::string*)                      {std::cout << "ParserValue: ParserNumber\n";                                    return NULL;}
-    virtual ParserValue*    valueParseBool(bool)                                {std::cout << "ParserValue: ParserTrue\n";                                      return NULL;}
-    virtual ParserValue*    valueParseNULL()                                    {std::cout << "ParserValue: ParserFalse\n";                                     return NULL;}
-    virtual int             lexResult(int val)                                  {std::cout << "LEX(" << val << ")\n";                                       return val;}
 };
 
 struct ParserCleanInterface: ParserInterface
@@ -119,9 +85,61 @@ struct ParserCleanInterface: ParserInterface
     virtual ParserValue*    valueParseMap(ParserMap* map)                       { delete map; return NULL;}
     virtual ParserValue*    valueParseArray(ParserArray* arr)                   { delete arr; return NULL;}
     virtual ParserValue*    valueParseString(std::string* str)                  { delete str; return NULL;}
+    virtual ParserValue*    valueParseNumber(int, int, std::string* num)        { delete num; return NULL;}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { delete num; return NULL;}
     virtual ParserValue*    valueParseBool(bool)                                { return NULL;}
-    virtual ParserValue*    valueParseNULL()                                    { return NULL;}
+    virtual ParserValue*    valueParseNULL(bool)                                { return NULL;}
+};
+
+template<typename T = ParserCleanInterface>
+struct ParserLogInterface: ParserInterface
+{
+    T   actualInterface;
+    virtual void            done(ParserObject* result)
+    {
+        if (result)
+        {
+            switch(result->type)
+            {
+                case ParserMapObject:   std::cout << "ParserObject: ParserMap\n";   break;
+                case ParserArrayObject: std::cout << "ParserObject: ParserArray\n"; break;
+                case ParserValueObject: std::cout << "ParserObject: ParserValue\n"; break;
+                default:                std::cout << "ParserObject: NOT SET\n";     break;
+            }
+        }
+        else
+        {
+            std::cout << "ParserObject: NULL\n";
+        }
+        actualInterface.done(result);
+    }
+    template<typename ...Args>
+    ParserLogInterface(Args&&... args)
+        : actualInterface(std::forward<Args>(args)...)
+    {}
+    virtual void            mapOpen()                                           {std::cout << "mapOpen!\n";                                                   actualInterface.mapOpen();}
+    virtual void            mapClose()                                          {std::cout << "ParserMap: { ParserMapValueListOpt }\n";                       actualInterface.mapClose();}
+    virtual std::string     mapValueToKey(ParserValue& val)                     {std::cout << "ParserValue -> MapKey\n";                                      return actualInterface.mapValueToKey(val);}
+    virtual ParserMap*      mapCreate()                                         {std::cout << "ParserMapValueListOpt: EMPTY\n";                               return actualInterface.mapCreate();}
+    virtual ParserMap*      mapCreate(ParserMapValue* val)                      {std::cout << "ParserMapValueList: ParserMapValue\n";                         return actualInterface.mapCreate(val);}
+    virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      {std::cout << "ParserMapValueList: ParserMapValueList , ParserMapValue\n";    return actualInterface.mapAppend(map, val);}
+    virtual ParserMapValue* mapCreateElement(ParserValue* v1,ParserValue* v2)   {std::cout << "ParserMapValue: PARSER_STRING : ParserValue\n";                return actualInterface.mapCreateElement(v1, v2);}
+    virtual ParserValue*    mapKeyNote(ParserValue* val)                        {                                                                             return actualInterface.mapKeyNote(val);}
+    virtual void            arrayOpen()                                         {std::cout << "arrayOpen!\n";                                                 actualInterface.arrayOpen();}
+    virtual void            arrayClose()                                        {std::cout << "ParserArray: [ ParserArrayValueListOpt ]\n";                   actualInterface.arrayClose();}
+    virtual ParserArray*    arrayCreate()                                       {std::cout << "ParserArrayValueListOpt: EMPTY\n";                             return actualInterface.arrayCreate();}
+    virtual ParserArray*    arrayCreate(ParserValue* val)                       {std::cout << "ParserArrayValueList: ParserArrayValue\n";                     return actualInterface.arrayCreate(val);}
+    virtual ParserArray*    arrayAppend(ParserArray* v1, ParserValue* v2)       {std::cout << "ParserArrayValueList: ParserArrayListItem ParserArrayValue\n"; return actualInterface.arrayAppend(v1, v2);}
+    virtual ParserArray*    arrayNote(ParserArray* val)                         {std::cout << "ParserArrayListItem: ParserArrayValueList ','\n";              return actualInterface.arrayNote(val);}
+    virtual ParserValue*    arrayCreateElement(ParserValue* val)                {std::cout << "ParserArrayValue: ParserValue\n";                              return actualInterface.arrayCreateElement(val);}
+    virtual ParserValue*    valueParseMap(ParserMap* val)                       {std::cout << "ParserValue: ParserMap\n";                                     return actualInterface.valueParseMap(val);}
+    virtual ParserValue*    valueParseArray(ParserArray* val)                   {std::cout << "ParserValue: ParserArray\n";                                   return actualInterface.valueParseArray(val);}
+    virtual ParserValue*    valueParseString(std::string* val)                  {std::cout << "ParserValue: ParserString\n";                                  return actualInterface.valueParseString(val);}
+    virtual ParserValue*    valueParseNumber(int base, int off, std::string* n) {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(base, off, n);}
+    virtual ParserValue*    valueParseNumber(std::string* num)                  {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(num);}
+    virtual ParserValue*    valueParseBool(bool val)                            {std::cout << "ParserValue: ParserTrue\n";                                    return actualInterface.valueParseBool(val);}
+    virtual ParserValue*    valueParseNULL(bool okKey = false)                  {std::cout << "ParserValue: ParserFalse\n";                                   return actualInterface.valueParseNULL(okKey);}
+    virtual int             lexResult(int val)                                  {std::cout << "LEX(" << val << ")\n";                                         return actualInterface.lexResult(val);}
 };
 
 struct ParserDomInterface: ParserCleanInterface
@@ -156,9 +174,18 @@ struct ParserDomInterface: ParserCleanInterface
     virtual ParserValue*    valueParseMap(ParserMap* map)                       { std::unique_ptr<ParserMap>     amap(map); return new ParserMapItem(amap);}
     virtual ParserValue*    valueParseArray(ParserArray* arr)                   { std::unique_ptr<ParserArray>   aarr(arr); return new ParserArrayItem(aarr);}
     virtual ParserValue*    valueParseString(std::string* str)                  { std::unique_ptr<std::string> astr(str); return new ParserStringItem(astr);}
+    virtual ParserValue*    valueParseNumber(int b, int o, std::string* num)    { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(b, o, anum);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
     virtual ParserValue*    valueParseBool(bool value)                          { return new ParserBoolItem(value);}
-    virtual ParserValue*    valueParseNULL()                                    { return new ParserNULLItem();}
+    virtual ParserValue*    valueParseNULL(bool okKey = false)                  { return new ParserNULLItem(okKey);}
+
+    ParserObject result;
+
+    virtual void            done(ParserObject* output)
+    {
+        result  = std::move(*output);
+        delete output;
+    }
 };
 
 

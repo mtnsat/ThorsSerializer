@@ -7,6 +7,7 @@
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
 #include <sstream>
+#include <algorithm>
 
 namespace ThorsAnvil
 {
@@ -28,8 +29,8 @@ namespace ThorsAnvil
  *          struct ParserNumber
  *          struct ParserBool
  *          struct ParserNULL
- *          struct ParserMap
- *          struct ParserArray
+ *          struct ParserMapItem
+ *          struct ParserArrayItem
  *
  */
 
@@ -69,10 +70,12 @@ class ParserMap
 
 
 typedef boost::ptr_vector<ParserValue>           ParserArray;
-enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject };
+enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject, NotSet };
 struct ParserObject
 {
-    ParserObjectType  type;
+    ParserObject()
+        : type(NotSet)
+    {}
     ParserObject(ParserMap* map)
         : type(ParserMapObject)
     {
@@ -94,6 +97,7 @@ struct ParserObject
     ParserObject(ParserObject const&)            = delete;
     ParserObject& operator=(ParserObject const&) = delete;
 
+    ParserObjectType  type;
     union
     {
         ParserMap*    map;
@@ -176,20 +180,35 @@ struct ParserStringItem: ParserValue
     ParserStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
 
     virtual std::string keyValue() const              {return *value;}
-    virtual void print(std::ostream& stream) const    { stream << '"' << *value << '"'; }
+    virtual void print(std::ostream& stream) const
+    {
+        std::string escapedString;
+        std::for_each(std::begin(*value), std::end(*value), [&escapedString](char next){
+            switch(next)
+            {
+                case '"':   escapedString   += "\\\"";          break;
+                case '\\':  escapedString   += "\\\\";          break;
+                default:    escapedString   += next;            break;
+           }
+        });
+        stream << '"' << escapedString << '"';
+    }
     private:
         virtual void setValue(std::string&       dst)  const {dst = *value;}
 };
 struct ParserNumberItem: ParserValue
 {
+    int                              base;
+    int                              offset;
     std::unique_ptr<std::string>     value;
-    ParserNumberItem(std::unique_ptr<std::string>& data): value(std::move(data))   {}
+    ParserNumberItem(std::unique_ptr<std::string>& data): base(0), offset(0), value(std::move(data))   {}
+    ParserNumberItem(int base, int offset, std::unique_ptr<std::string>& data): base(base), offset(offset), value(std::move(data))   {}
 
     virtual std::string keyValue() const              {return *value;}
     virtual void print(std::ostream& stream) const    { stream << *value; }
     private:
-        virtual void setValue(long&         dst)  const {dst = std::atol(value->c_str());}
-        virtual void setValue(double&       dst)  const {dst = std::atof(value->c_str());}
+        virtual void setValue(long&         dst)  const {dst = base == 0 ? std::atol(value->c_str()) : std::strtol(value->c_str() + offset, nullptr, base);}
+        virtual void setValue(double&       dst)  const {dst = base == 0 ? std::atof(value->c_str()) : static_cast<double>(std::strtol(value->c_str() + offset, nullptr, base));}
 };
 struct ParserBoolItem: ParserValue
 {
@@ -203,9 +222,16 @@ struct ParserBoolItem: ParserValue
 };
 struct ParserNULLItem: ParserValue
 {
-    virtual std::string keyValue() const              { throw std::runtime_error("Using NULL as KEY");}
+    virtual std::string keyValue() const              { if (!okForKey) {throw std::runtime_error("Using NULL as KEY");} return "null";}
     virtual void print(std::ostream& stream) const    { stream << "null"; }
+
+    // JSON it is not OK thus the default false.
+    // YAML allows NULL keys in the map.
+    ParserNULLItem(bool okForKey = false)
+        : okForKey(okForKey)
+    {}
     private:
+        bool        okForKey;
         virtual void setValue(long&         dst)  const {dst= 0;}
         virtual void setValue(double&       dst)  const {dst= 0.0;}
         virtual void setValue(bool&         dst)  const {dst= false;}
@@ -279,6 +305,7 @@ inline ParserObject::~ParserObject()
         case ParserMapObject:       delete data.map;    break;
         case ParserArrayObject:     delete data.array;  break;
         case ParserValueObject:     delete data.value;  break;
+        default:                                        break;
     }
 }
 inline ParserObject::ParserObject(ParserObject&& move)
@@ -289,6 +316,7 @@ inline ParserObject::ParserObject(ParserObject&& move)
         case ParserMapObject:       data.map    = nullptr;  break;
         case ParserArrayObject:     data.array  = nullptr;  break;
         case ParserValueObject:     data.value  = nullptr;  break;
+        default:                                            break;
     }
     (*this) = std::move(move);
 }
@@ -296,18 +324,30 @@ inline ParserObject& ParserObject::operator=(ParserObject&& move)
 {
     if (this != &move)
     {
-        switch(type)
+        if (type != move.type)
         {
-            case ParserMapObject:       delete data.map;    break;
-            case ParserArrayObject:     delete data.array;  break;
-            case ParserValueObject:     delete data.value;  break;
+            switch(type)
+            {
+                case ParserMapObject:       delete data.map;    break;
+                case ParserArrayObject:     delete data.array;  break;
+                case ParserValueObject:     delete data.value;  break;
+                default:                                        break;
+            }
+            type = move.type;
+            switch(type)
+            {
+                case ParserMapObject:       data.map    = nullptr;  break;
+                case ParserArrayObject:     data.array  = nullptr;  break;
+                case ParserValueObject:     data.value  = nullptr;  break;
+                default:                                            break;
+            }
         }
-        type = move.type;
         switch(type)
         {
             case ParserMapObject:       std::swap(data.map,   move.data.map);   break;
             case ParserArrayObject:     std::swap(data.array, move.data.array); break;
             case ParserValueObject:     std::swap(data.value, move.data.value); break;
+            default:                                                            break;
         }
     }
     return *this;
