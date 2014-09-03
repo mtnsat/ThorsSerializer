@@ -99,13 +99,13 @@ template<> struct ParseTrait<long double>       { typedef double       GetType;}
 template<> struct ParseTrait<double>            { typedef double       GetType;};
 template<> struct ParseTrait<float>             { typedef double       GetType;};
 
-//template<> struct ParseTrait<long long>         { typedef long         GetType;};
+template<> struct ParseTrait<long long>         { typedef long         GetType;};
 template<> struct ParseTrait<long>              { typedef long         GetType;};
 template<> struct ParseTrait<int>               { typedef long         GetType;};
 template<> struct ParseTrait<short>             { typedef long         GetType;};
 template<> struct ParseTrait<signed char>       { typedef long         GetType;};
 
-//template<> struct ParseTrait<unsigned long long>{ typedef long         GetType;};
+template<> struct ParseTrait<unsigned long long>{ typedef long         GetType;};
 template<> struct ParseTrait<unsigned long>     { typedef long         GetType;};
 template<> struct ParseTrait<unsigned int>      { typedef long         GetType;};
 template<> struct ParseTrait<unsigned short>    { typedef long         GetType;};
