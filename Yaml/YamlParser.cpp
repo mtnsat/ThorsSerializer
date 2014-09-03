@@ -497,7 +497,6 @@ struct ParserInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  = 0; *
     virtual ParserValue*    valueParseBool(bool value)                          = 0; *
     virtual ParserValue*    valueParseNULL()                                    = 0; *
-    virtual int             lexResult(int val)                                  { return val;}
 };
 */
 

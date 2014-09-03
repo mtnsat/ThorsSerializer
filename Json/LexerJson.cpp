@@ -8,9 +8,9 @@ LexerJson::LexerJson(std::istream& input)
     : JsonBaseFlexLexer(&input, &std::cerr)
 {}
 
-int LexerJson::yylex(Parser::ParserInterface& pi)
+int LexerJson::yylex(Parser::ParserInterface&)
 {
-    return pi.lexResult(JsonBaseFlexLexer::yylex());
+    return JsonBaseFlexLexer::yylex();
 }
 
 void LexerJson::LexerError(const char* msg)

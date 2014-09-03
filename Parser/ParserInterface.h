@@ -63,7 +63,6 @@ struct ParserInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  = 0;
     virtual ParserValue*    valueParseBool(bool value)                          = 0;
     virtual ParserValue*    valueParseNULL(bool okKey = false)                  = 0;
-    virtual int             lexResult(int val)                                  { return val;}
 };
 
 struct ParserCleanInterface: ParserInterface
@@ -141,7 +140,6 @@ struct ParserLogInterface: ParserInterface
     virtual ParserValue*    valueParseNumber(std::string* num)                  {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(num);}
     virtual ParserValue*    valueParseBool(bool val)                            {std::cout << "ParserValue: ParserTrue\n";                                    return actualInterface.valueParseBool(val);}
     virtual ParserValue*    valueParseNULL(bool okKey = false)                  {std::cout << "ParserValue: ParserFalse\n";                                   return actualInterface.valueParseNULL(okKey);}
-    virtual int             lexResult(int val)                                  {std::cout << "LEX(" << val << ")\n";                                         return actualInterface.lexResult(val);}
 };
 
 struct ParserDomInterface: ParserCleanInterface
