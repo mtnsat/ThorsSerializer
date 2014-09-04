@@ -3,6 +3,7 @@
 #define THORSANVIL_PARSER_PARSER_PARSER_INTERFACE_H
 
 #include "ParserDom.h"
+#include "ParserDomVisit.h"
 #include "ParserException.h"
 #include "LexerParser.h"
 
@@ -37,13 +38,34 @@ enum ParserObjectType { ParserMapObject, ParserArrayObject, ParserValueObject, N
 /*
  * The interface injected into the parser that will do the work.
  */
+struct KeyGenVisitor: public ParserValueConstVisitor
+{
+    virtual void visit(ParserStringItem const&)        {}
+    virtual void visit(ParserNumberItem const&)        {}
+    virtual void visit(ParserBoolItem const&)          {}
+    virtual void visit(ParserNULLItem const&)          {}
+    virtual void visit(ParserMapItem const&)           {}
+    virtual void visit(ParserArrayItem const&)         {}
+    virtual void visit(ParserMap const&, Storage const&, Storage const&) {}
+    virtual void visit(ParserArray const&)             {}
+    virtual std::string  getKey() { return "";}
+};
 struct ParserInterface
 {
-    ~ParserInterface()  {}
+    KeyGenVisitor&       keyGenVisitor;
+    ParserInterface(KeyGenVisitor& keyGenVisitor)
+        : keyGenVisitor(keyGenVisitor)
+    {}
+    virtual ~ParserInterface()  {}
+    std::string mapValueToKey(ParserValue& key)
+    {
+       //key.accept(keyGenVisitor);
+       //return keyGenVisitor.getKey();
+        return key.keyValue();
+    }
     virtual void            done(ParserObjectType type, ParserValue* result)    = 0;
     virtual void            mapOpen()                                           = 0;
     virtual void            mapClose()                                          = 0;
-    virtual std::string     mapValueToKey(ParserValue& key)                     = 0;
     virtual ParserMap*      mapCreate()                                         = 0;
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      = 0;
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      = 0;
@@ -67,10 +89,12 @@ struct ParserInterface
 
 struct ParserCleanInterface: ParserInterface
 {
+    ParserCleanInterface(KeyGenVisitor& keyGenVisitor)
+        : ParserInterface(keyGenVisitor)
+    {}
     virtual void            done(ParserObjectType, ParserValue* result)         { delete result;}
     virtual void            mapOpen()                                           {}
     virtual void            mapClose()                                          {}
-    virtual std::string     mapValueToKey(ParserValue&)                         { return "";}
     virtual ParserMap*      mapCreate()                                         { return NULL;}
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      { delete val; return NULL;}
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      { std::unique_ptr<ParserMapValue> aval(val); delete map; return NULL;}
@@ -115,12 +139,12 @@ struct ParserLogInterface: ParserInterface
         actualInterface.done(type, result);
     }
     template<typename ...Args>
-    ParserLogInterface(Args&&... args)
-        : actualInterface(std::forward<Args>(args)...)
+    ParserLogInterface(KeyGenVisitor& keyGenVisitor, Args&&... args)
+        : ParserInterface(keyGenVisitor)
+        , actualInterface(keyGenVisitor, std::forward<Args>(args)...)
     {}
     virtual void            mapOpen()                                           {std::cout << "mapOpen!\n";                                                   actualInterface.mapOpen();}
     virtual void            mapClose()                                          {std::cout << "ParserMap: { ParserMapValueListOpt }\n";                       actualInterface.mapClose();}
-    virtual std::string     mapValueToKey(ParserValue& val)                     {std::cout << "ParserValue -> MapKey\n";                                      return actualInterface.mapValueToKey(val);}
     virtual ParserMap*      mapCreate()                                         {std::cout << "ParserMapValueListOpt: EMPTY\n";                               return actualInterface.mapCreate();}
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      {std::cout << "ParserMapValueList: ParserMapValue\n";                         return actualInterface.mapCreate(val);}
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      {std::cout << "ParserMapValueList: ParserMapValueList , ParserMapValue\n";    return actualInterface.mapAppend(map, val);}
@@ -144,9 +168,6 @@ struct ParserLogInterface: ParserInterface
 
 struct ParserDomInterface: ParserCleanInterface
 {
-    virtual std::string     mapValueToKey(ParserValue& key)                     {
-                                                                                  return key.keyValue();
-                                                                                }
     virtual ParserMap*      mapCreate()                                         { return new ParserMap();}
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      {
                                                                                   std::unique_ptr<ParserMapValue>   aval(val);
@@ -182,8 +203,9 @@ struct ParserDomInterface: ParserCleanInterface
     ParserObjectType                type;
     std::unique_ptr<ParserValue>    result;
 
-    ParserDomInterface()
-        : type(NotSet)
+    ParserDomInterface(KeyGenVisitor& keyGenVisitor)
+        : ParserCleanInterface(keyGenVisitor)
+        , type(NotSet)
     {}
     virtual void            done(ParserObjectType valueType, ParserValue* value)
     {

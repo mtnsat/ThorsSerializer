@@ -11,6 +11,7 @@ namespace ThorsAnvil
     namespace Parser
     {
 
+template<typename KeyGenerator>
 class ScannerDom
 {
     ParserObjectType                type;
@@ -39,20 +40,23 @@ class ScannerDomInterface: public ParserDomInterface
     ParserObjectType&               type;
     std::unique_ptr<ParserValue>&   resultRef;
     public:
-    ScannerDomInterface(ParserObjectType& type, std::unique_ptr<ParserValue>&  result)
-        : type(type)
+    ScannerDomInterface(KeyGenVisitor& keyGenVisitor, ParserObjectType& type, std::unique_ptr<ParserValue>&  result)
+        : ParserDomInterface(keyGenVisitor)
+        , type(type)
         , resultRef(result)
     {}
 
     virtual void            done(ParserObjectType valueType, ParserValue* result)        { type = valueType; resultRef.reset(result);}
 };
 
+template<typename KeyGenerator>
 template<typename Parser>
-ParserObjectType ScannerDom::parse(std::istream& stream)
+ParserObjectType ScannerDom<KeyGenerator>::parse(std::istream& stream)
 {
     result.release();
 
-    ScannerDomInterface     scanner(type, result);
+    KeyGenerator            keyGenerator;
+    ScannerDomInterface     scanner(keyGenerator, type, result);
     Parser                  parser(stream, scanner);
 
     // If this fails it throws.

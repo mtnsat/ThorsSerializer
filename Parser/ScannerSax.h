@@ -23,18 +23,18 @@ struct Key
     Key(int key):                mapKey(""),  arrKey(key), isMapKey(false){}
 };
 
-class ScannerSax;
+class ScannerBaseSax;
 struct SaxAction
 {
     virtual ~SaxAction() {}
-    virtual void doAction(ScannerSax&, Key const& key, ParserValue const&) = 0;
-    virtual void doPreAction(ScannerSax&,Key const& key)                 = 0;
+    virtual void doAction(ScannerBaseSax&, Key const& key, ParserValue const&) = 0;
+    virtual void doPreAction(ScannerBaseSax&,Key const& key)                 = 0;
 };
 
 
 class ScannerSaxInterface;
 typedef void*  ActionRefNote;
-class ScannerSax
+class ScannerBaseSax
 {
     template<typename Key>
     class PtrMap: public std::map<Key, SaxAction*>
@@ -82,10 +82,8 @@ class ScannerSax
     ScannerArrActionList::const_iterator    arrAction;
 
     public:
-        ~ScannerSax();
-         ScannerSax();
-        template<typename Parser, typename Interface = ScannerSaxInterface>
-        void            parse(std::istream& src);
+        ~ScannerBaseSax();
+         ScannerBaseSax();
         ActionRefNote   registerAction(std::string const& mapItem, std::unique_ptr<SaxAction> action);
         ActionRefNote   registerActionNext(std::unique_ptr<SaxAction> action);
         ActionRefNote   registerActionOnAllMapItems(std::unique_ptr<SaxAction> action);
@@ -108,12 +106,20 @@ class ScannerSax
         void    pop_arrAction()     {arrActions.pop_front();arrActions.front().clear();++arrAction;}
 };
 
+template<typename KeyGenerator>
+class ScannerSax: public ScannerBaseSax
+{
+    public:
+        template<typename Parser>
+        void            parse(std::istream& src);
+};
+
 class ScannerSaxInterface: public ParserCleanInterface
 {
     std::list<int> currentArrayIndex;
-    ScannerSax&     parent;
+    ScannerBaseSax&     parent;
     public:
-    ScannerSaxInterface(ScannerSax& p): parent(p)   {}
+    ScannerSaxInterface(KeyGenVisitor& keyGenerator, ScannerBaseSax& p): ParserCleanInterface(keyGenerator), parent(p)   {}
     virtual void            mapOpen()                                           { parent.push_mapAction();}
     virtual void            mapClose()                                          { parent.pop_mapAction();}
     virtual ParserValue*    mapKeyNote(ParserValue* k)                          {
@@ -132,11 +138,14 @@ class ScannerSaxInterface: public ParserCleanInterface
     virtual ParserValue*    valueParseBool(bool val)                            {                                         return new ParserBoolItem(val);}
     virtual ParserValue*    valueParseNULL(bool okKey = false)                  {                                         return new ParserNULLItem(okKey);}
 };
-template<typename Parser, typename Interface>
-void ScannerSax::parse(std::istream& src)
+
+template<typename KeyGenerator>
+template<typename Parser>
+void ScannerSax<KeyGenerator>::parse(std::istream& src)
 {
-    Interface     scanner(*this);
-    Parser        parser(src, scanner);
+    KeyGenerator            keyGenerator;
+    ScannerSaxInterface     scanner(keyGenerator, *this);
+    Parser                  parser(src, scanner);
 
     parser.parse();
 }

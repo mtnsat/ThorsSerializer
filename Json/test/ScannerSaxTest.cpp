@@ -3,11 +3,13 @@
 #include "JsonParser.h"
 #include "ParserShiftReduce.h"
 #include "ParserRecursive.h"
-#include "Parser/ScannerSax.h"
+#include "JsonScanner.h"
 #include <sstream>
 
 using ThorsAnvil::Json::JsonParser;
 using ThorsAnvil::Json::JsonParserAlt;
+using ThorsAnvil::Json::JsonScannerSax;
+using ThorsAnvil::Json::JsonScannerAltSax;
 
 template<typename T>
 struct TestAction: ThorsAnvil::Parser::SaxAction
@@ -23,12 +25,12 @@ struct TestAction: ThorsAnvil::Parser::SaxAction
     bool&   action;
     T&      value;
 
-    virtual void doPreAction(ThorsAnvil::Parser::ScannerSax&, ThorsAnvil::Parser::Key const&)
+    virtual void doPreAction(ThorsAnvil::Parser::ScannerBaseSax&, ThorsAnvil::Parser::Key const&)
     {
         preAction   = true;
         ++count;
     }
-    virtual void doAction(ThorsAnvil::Parser::ScannerSax&, ThorsAnvil::Parser::Key const&, ThorsAnvil::Parser::ParserValue const& input)
+    virtual void doAction(ThorsAnvil::Parser::ScannerBaseSax&, ThorsAnvil::Parser::Key const&, ThorsAnvil::Parser::ParserValue const& input)
     {
         action      = true;
         value       = input.getValue<T>();
@@ -45,9 +47,9 @@ TEST(ScannerSax, ShiftReduceScanMapEmpty)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
     std::stringstream                               json("{}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -63,9 +65,9 @@ TEST(ScannerSax, ShiftReduceScanMapMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I2\" : 1}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -81,9 +83,9 @@ TEST(ScannerSax, ShiftReduceScanMapHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I1\" : 123}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -100,9 +102,9 @@ TEST(ScannerSax, ShiftReduceScanArrayEmpty)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -119,11 +121,11 @@ TEST(ScannerSax, ShiftReduceScanArrayMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ true ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerSax                                  scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<JsonParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(preAction == false);
     ASSERT_TRUE(action == false);
@@ -139,10 +141,10 @@ TEST(ScannerSax, ShiftReduceScanArrayHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ 512, true ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerSax                                  scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<JsonParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -160,9 +162,9 @@ TEST(ScannerSax, RecursiveScanMapEmpty)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<std::string>(count, preAction, action, value));
 
     std::stringstream                               json("{}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -178,9 +180,9 @@ TEST(ScannerSax, RecursiveScanMapMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<std::string>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I2\" : \"S1\"}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -196,9 +198,9 @@ TEST(ScannerSax, RecursiveScanMapHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<std::string>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I1\" : \"123SS\"}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -215,9 +217,9 @@ TEST(ScannerSax, RecursiveScanArrayEmpty)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -234,11 +236,11 @@ TEST(ScannerSax, RecursiveScanArrayMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ false ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -255,10 +257,10 @@ TEST(ScannerSax, RecursiveScanArrayHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ 512, false ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -281,7 +283,7 @@ TEST(ScannerSax, ReplaceAction)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction2(new TestAction<int>(count2, preAction2, action2, value2));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
 
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      emptyAction;
     scanner.registerActionNext(std::move(emptyAction));
@@ -290,7 +292,7 @@ TEST(ScannerSax, ReplaceAction)
     scanner.replaceAction(actNote, std::move(saxAction2));
 
     std::stringstream                               json("[ 512, 567 ]");
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -310,12 +312,12 @@ TEST(ScannerSax, DefaultArrayAction)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
 
     ThorsAnvil::Parser::ActionRefNote actNote = scanner.registerActionOnAllArrItems(std::move(saxAction));
 
     std::stringstream                               json("[ 512, 567 ]");
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(2, count);
     ASSERT_TRUE(preAction == true);
@@ -332,12 +334,12 @@ TEST(ScannerSax, DefaultMapAction)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
 
     ThorsAnvil::Parser::ActionRefNote actNote = scanner.registerAction("\xFF", std::move(saxAction));
 
     std::stringstream                               json("{ \"I1\": 512, \"I2\": 567 }");
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(2, count);
     ASSERT_TRUE(preAction == true);
@@ -354,12 +356,12 @@ TEST(ScannerSax, GetNullValue)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    JsonScannerAltSax                               scanner;
 
     ThorsAnvil::Parser::ActionRefNote actNote = scanner.registerAction("I1", std::move(saxAction));
 
     std::stringstream                               json("{ \"I1\": null}");
-    scanner.parse<JsonParserAlt>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(1, count);
     ASSERT_TRUE(preAction == true);

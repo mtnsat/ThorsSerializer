@@ -12,7 +12,8 @@ TEST(LexerJson, EmptyStream)
 {
     std::stringstream                       jsonElements("");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
     ASSERT_TRUE(parser.yylex(cleanInterface) == 0);
 }
@@ -21,7 +22,8 @@ TEST(LexerJson, BasicElements)
 {
     std::stringstream                       jsonElements("{} [] , : true false null");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
     ASSERT_TRUE(parser.yylex(cleanInterface) == '{');
     ASSERT_TRUE(parser.yylex(cleanInterface) == '}');
@@ -51,7 +53,8 @@ TEST(LexerJson, Number)
 
     std::stringstream                       jsonElements("0 0.1 0.9 0e1 0e99 0E+2 0E-3 -0 1 2.1 3.9 4e1 5e99 6E+2 7E-3 -8 9  10 21.1 32.9 43e1 54e99 65E+2 76E-3 -87 98");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
     ASSERT_TRUE(validateNumber<int>(parser, cleanInterface, 0));
     ASSERT_TRUE(validateNumber<double>(parser, cleanInterface, 0.1));
@@ -97,7 +100,8 @@ TEST(LexerJson, String)
 {
     std::stringstream                       jsonElements("\"Text\" \"\\\"\"  \"\\\\\" \"\\/\" \"\\b\" \"\\f\" \"\\n\" \"\\r\" \"\\t\" \"\\u0020\" \"\\u00a0\" \"\\u1Fd5\" \"\\uD834\\uDD1E\"");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
 
     ASSERT_TRUE(validateString(parser, cleanInterface, "Text"));
@@ -143,7 +147,8 @@ TEST(LexerJson, InvalidCharacter)
 {
     std::stringstream                       jsonElements("\\ ");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
     // Only valid chaacters are "{}[]:, true false null <number> <string>"
     // Find '\' character so throw
@@ -154,7 +159,8 @@ TEST(LexerJson, InvalidSlash)
 {
     std::stringstream                       jsonElements("\"\\ \"");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
     // Inside a string all characters are valid.
     // But a '\' must be followed by a valid escape code
@@ -165,7 +171,8 @@ TEST(LexerJson, InvalidUnicode)
 {
     std::stringstream                       jsonElements("\"\\uG \"");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
     ASSERT_THROW(parser.yylex(cleanInterface), ThorsAnvil::Parser::ParsingError);
 }
@@ -174,7 +181,8 @@ TEST(LexerJson, InvalidUnicodeSurogatePair)
 {
     std::stringstream                       jsonElements("\"\\uD801 \" \"\\uD801\\n\" \"\\uD801\\u0020\"");
     ThorsAnvil::Json::LexerJson             parser(jsonElements);
-    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface;
+    ThorsAnvil::Parser::KeyGenVisitor       blankKeyGen;
+    ThorsAnvil::Parser::ParserCleanInterface  cleanInterface(blankKeyGen);
 
 
     ASSERT_TRUE(parser.yylex(cleanInterface) == yy::ParserShiftReduce::token::JSON_STRING);

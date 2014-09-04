@@ -477,7 +477,6 @@ struct ParserInterface
     virtual void            done(YamlObject* result)                          = 0;
     virtual void            mapOpen()                                           = 0; *
     virtual void            mapClose()                                          = 0; *
-    virtual std::string     mapValueToKey(ParserValue& key)                     = 0;
     virtual ParserMap*      mapCreate()                                         = 0; *
     virtual ParserMap*      mapCreate(ParserMapValue* val)                      = 0; *
     virtual ParserMap*      mapAppend(ParserMap* map, ParserMapValue* val)      = 0; *

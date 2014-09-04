@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "YamlParser.h"
+#include "YamlScanner.h"
 #include "Parser/ParserDom.h"
 #include "Parser/ParserInterface.h"
 #include <sstream>
@@ -7,6 +8,7 @@
 #include <string>
 
 using ThorsAnvil::Yaml::YamlParser;
+using ThorsAnvil::Yaml::YamlKeyGen;
 using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
 using ThorsAnvil::Parser::ParserDomInterface;

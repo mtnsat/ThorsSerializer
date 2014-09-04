@@ -8,7 +8,7 @@
 
 using namespace ThorsAnvil::Parser;
 
-ScannerSax::ScannerSax()
+ScannerBaseSax::ScannerBaseSax()
     : mapActions(1, ScannerMapActionMap())
     , arrActions(1, ScannerArrActionMap())
     , mapAction(mapActions.begin())
@@ -18,17 +18,17 @@ ScannerSax::ScannerSax()
     arrActions.push_front(ScannerArrActionMap());
 }
 
-ScannerSax::~ScannerSax()
+ScannerBaseSax::~ScannerBaseSax()
 {
 }
 
-ActionRefNote ScannerSax::registerActionOnAllMapItems(std::unique_ptr<SaxAction> action)
+ActionRefNote ScannerBaseSax::registerActionOnAllMapItems(std::unique_ptr<SaxAction> action)
 {
     // \xFF is an invalid UTF-8 character
     // The parser will never generate mapItem of this string
     return registerAction("\xFF", std::move(action));
 }
-ActionRefNote ScannerSax::registerAction(std::string const& mapItem, std::unique_ptr<SaxAction> action)
+ActionRefNote ScannerBaseSax::registerAction(std::string const& mapItem, std::unique_ptr<SaxAction> action)
 {
     SaxAction*&  location    = mapActions.front()[mapItem];
     std::unique_ptr<SaxAction>  oldLocation(location);
@@ -36,14 +36,14 @@ ActionRefNote ScannerSax::registerAction(std::string const& mapItem, std::unique
     return &location;
 }
 
-ActionRefNote ScannerSax::registerActionOnAllArrItems(std::unique_ptr<SaxAction> action)
+ActionRefNote ScannerBaseSax::registerActionOnAllArrItems(std::unique_ptr<SaxAction> action)
 {
     SaxAction*&  location    = arrActions.front().map[-1];
     std::unique_ptr<SaxAction>  oldLocation(location);
     location    = action.release();
     return &location;
 }
-ActionRefNote ScannerSax::registerActionNext(std::unique_ptr<SaxAction> action)
+ActionRefNote ScannerBaseSax::registerActionNext(std::unique_ptr<SaxAction> action)
 {
     int          index       = arrActions.front().max++;
     SaxAction*&  location    = arrActions.front().map[index];
@@ -52,14 +52,14 @@ ActionRefNote ScannerSax::registerActionNext(std::unique_ptr<SaxAction> action)
     return &location;
 }
 
-void ScannerSax::replaceAction(ActionRefNote oldActionRef, std::unique_ptr<SaxAction> action)
+void ScannerBaseSax::replaceAction(ActionRefNote oldActionRef, std::unique_ptr<SaxAction> action)
 {
     SaxAction*& location    = *reinterpret_cast<SaxAction**>(oldActionRef);
     std::unique_ptr<SaxAction>  oldLocation(location);
     location                = action.release();
 }
 
-SaxAction* ScannerSax::getAction(std::string const& mapItem)
+SaxAction* ScannerBaseSax::getAction(std::string const& mapItem)
 {
     SaxAction*                          action  = NULL;
     ScannerMapActionMap::const_iterator find1;
@@ -74,7 +74,7 @@ SaxAction* ScannerSax::getAction(std::string const& mapItem)
     }
     return action;
 }
-SaxAction* ScannerSax::getAction(int index)
+SaxAction* ScannerBaseSax::getAction(int index)
 {
     SaxAction*                          action  = NULL;
     ScannerArrActionMap::const_iterator find;
@@ -89,7 +89,7 @@ SaxAction* ScannerSax::getAction(int index)
     return action;
 }
 
-void ScannerSax::preActivate(ParserValue const& mapItem)
+void ScannerBaseSax::preActivate(ParserValue const& mapItem)
 {
     std::string key = mapItem.keyValue();
     SaxAction*  action = getAction(key);
@@ -98,7 +98,7 @@ void ScannerSax::preActivate(ParserValue const& mapItem)
         action->doPreAction(*this, Key(key));
     }
 }
-void ScannerSax::preActivate(int index)
+void ScannerBaseSax::preActivate(int index)
 {
     SaxAction*  action = getAction(index);
     if (action != NULL)
@@ -107,7 +107,7 @@ void ScannerSax::preActivate(int index)
     }
 }
 
-void ScannerSax::activate(ParserValue const& mapItem, ParserValue const& value)
+void ScannerBaseSax::activate(ParserValue const& mapItem, ParserValue const& value)
 {
     std::string key = mapItem.keyValue();
     SaxAction*  action = getAction(key);
@@ -116,7 +116,7 @@ void ScannerSax::activate(ParserValue const& mapItem, ParserValue const& value)
         action->doAction(*this, Key(key), value);
     }
 }
-void ScannerSax::activate(int index, ParserValue const& value)
+void ScannerBaseSax::activate(int index, ParserValue const& value)
 {
     SaxAction*  action = getAction(index);
     if (action != NULL)

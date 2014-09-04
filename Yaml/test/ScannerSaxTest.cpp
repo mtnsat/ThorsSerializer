@@ -1,10 +1,11 @@
 
 #include "gtest/gtest.h"
 #include "YamlParser.h"
-#include "Parser/ScannerSax.h"
+#include "YamlScanner.h"
 #include <sstream>
 
 using ThorsAnvil::Yaml::YamlParser;
+using ThorsAnvil::Yaml::YamlScannerSax;;
 
 template<typename T>
 struct TestAction: ThorsAnvil::Parser::SaxAction
@@ -20,12 +21,12 @@ struct TestAction: ThorsAnvil::Parser::SaxAction
     bool&   action;
     T&      value;
 
-    virtual void doPreAction(ThorsAnvil::Parser::ScannerSax&, ThorsAnvil::Parser::Key const&)
+    virtual void doPreAction(ThorsAnvil::Parser::ScannerBaseSax&, ThorsAnvil::Parser::Key const&)
     {
         preAction   = true;
         ++count;
     }
-    virtual void doAction(ThorsAnvil::Parser::ScannerSax&, ThorsAnvil::Parser::Key const&, ThorsAnvil::Parser::ParserValue const& input)
+    virtual void doAction(ThorsAnvil::Parser::ScannerBaseSax&, ThorsAnvil::Parser::Key const&, ThorsAnvil::Parser::ParserValue const& input)
     {
         action      = true;
         value       = input.getValue<T>();
@@ -42,9 +43,9 @@ TEST(ScannerSax, YamlScanMapEmpty)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
     std::stringstream                               json("{}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -60,9 +61,9 @@ TEST(ScannerSax, YamlScanMapMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I2\" : 1}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -79,9 +80,9 @@ TEST(ScannerSax, YamlScanMapHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I1\" : 123}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -98,9 +99,9 @@ TEST(ScannerSax, YamlScanArrayEmpty)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -117,11 +118,11 @@ TEST(ScannerSax, YamlScanArrayMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ true ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(preAction == false);
     ASSERT_TRUE(action == false);
@@ -137,11 +138,11 @@ TEST(ScannerSax, YamlScanArrayHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ 512, true ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
 
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(true, action);
     ASSERT_EQ(1, count);
@@ -158,9 +159,9 @@ TEST(ScannerSax, YamlAltScanMapMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<std::string>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I2\" : \"S1\"}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -176,9 +177,9 @@ TEST(ScannerSax, YamlAltScanMapHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<std::string>(count, preAction, action, value));
 
     std::stringstream                               json("{ \"I1\" : \"123SS\"}");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerAction("I1", std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -196,11 +197,11 @@ TEST(ScannerSax, YamlAltScanArrayMiss)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ false ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -217,10 +218,10 @@ TEST(ScannerSax, YamlAltScanArrayHit)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
     std::stringstream                               json("[ 512, false ]");
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
     scanner.registerActionNext(std::move(emptyAction));
     scanner.registerActionNext(std::move(saxAction));
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 1);
     ASSERT_TRUE(preAction == true);
@@ -243,7 +244,7 @@ TEST(ScannerSax, ReplaceAction)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction2(new TestAction<int>(count2, preAction2, action2, value2));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
 
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      emptyAction;
     scanner.registerActionNext(std::move(emptyAction));
@@ -252,7 +253,7 @@ TEST(ScannerSax, ReplaceAction)
     scanner.replaceAction(actNote, std::move(saxAction2));
 
     std::stringstream                               json("[ 512, 567 ]");
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_TRUE(count == 0);
     ASSERT_TRUE(preAction == false);
@@ -272,12 +273,12 @@ TEST(ScannerSax, DefaultArrayAction)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
 
     ThorsAnvil::Parser::ActionRefNote actNote = scanner.registerActionOnAllArrItems(std::move(saxAction));
 
     std::stringstream                               json("[ 512, 567 ]");
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(2, count);
     ASSERT_TRUE(preAction == true);
@@ -294,12 +295,12 @@ TEST(ScannerSax, DefaultMapAction)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<int>(count, preAction, action, value));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
 
     ThorsAnvil::Parser::ActionRefNote actNote = scanner.registerAction("\xFF", std::move(saxAction));
 
     std::stringstream                               json("{ \"I1\": 512, \"I2\": 567 }");
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(2, count);
     ASSERT_TRUE(preAction == true);
@@ -316,12 +317,12 @@ TEST(ScannerSax, GetNullValue)
     std::unique_ptr<ThorsAnvil::Parser::SaxAction>      saxAction(new TestAction<bool>(count, preAction, action, value));
 
 
-    ThorsAnvil::Parser::ScannerSax                    scanner;
+    YamlScannerSax                                  scanner;
 
     ThorsAnvil::Parser::ActionRefNote actNote = scanner.registerAction("I1", std::move(saxAction));
 
     std::stringstream                               json("{ \"I1\": null}");
-    scanner.parse<YamlParser>(json);
+    scanner.parse(json);
 
     ASSERT_EQ(1, count);
     ASSERT_TRUE(preAction == true);

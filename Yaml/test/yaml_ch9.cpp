@@ -1,5 +1,6 @@
 #include "gtest/gtest.h"
 #include "YamlParser.h"
+#include "YamlScanner.h"
 #include "Parser/ParserDom.h"
 #include "Parser/ParserInterface.h"
 #include <sstream>
@@ -7,6 +8,7 @@
 #include <string>
 
 using ThorsAnvil::Yaml::YamlParser;
+using ThorsAnvil::Yaml::YamlKeyGen;
 using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
 using ThorsAnvil::Parser::ParserDomInterface;
@@ -54,7 +56,8 @@ TEST(Yaml_Ch9, DISABLED_BareDocuments)
     std::string       output1{  "\"Bare document\"" };
     std::string       output2{  "\"%!PS-Adobe-2.0\n\"" };
 
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserValueObject, output1);
@@ -74,7 +77,8 @@ TEST(Yaml_Ch9, DISABLED_ExplicitDocuments)
     std::string       output1{  "{\"matches %\": 20}" };
     std::string       output2{  "\"\"" };
 
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserMapObject, output1);
@@ -95,7 +99,8 @@ TEST(Yaml_Ch9, DISABLED_DirectivesDocuments)
     std::string       output1{  "\"%!PS-Adobe-2.0\n\"" };
     std::string       output2{  "\"\"" };
 
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserValueObject, output1);
@@ -116,7 +121,8 @@ TEST(Yaml_Ch9, DISABLED_Stream)
     std::string       output2{  "null" };
     std::string       output3{  "{\"matches %\": 20}" };
 
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserValueObject, output1);

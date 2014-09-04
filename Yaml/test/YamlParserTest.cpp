@@ -6,12 +6,14 @@
 
 using ThorsAnvil::Parser::ParserCleanInterface;
 using ThorsAnvil::Parser::ParserLogInterface;
+using ThorsAnvil::Parser::KeyGenVisitor;
 using ThorsAnvil::Yaml::YamlParser;
 
 TEST(YamlParserTest, EmptyMap)
 {
     std::stringstream           json("{}");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -20,7 +22,8 @@ TEST(YamlParserTest, EmptyMap)
 TEST(YamlParserTest, EmptyArray)
 {
     std::stringstream           json("[]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -29,7 +32,8 @@ TEST(YamlParserTest, EmptyArray)
 TEST(YamlParserTest, ArrayWithNumber)
 {
     std::stringstream           json("[ 1 ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -38,7 +42,8 @@ TEST(YamlParserTest, ArrayWithNumber)
 TEST(YamlParserTest, ArrayWithString)
 {
     std::stringstream           json("[ \"String\" ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -47,7 +52,8 @@ TEST(YamlParserTest, ArrayWithString)
 TEST(YamlParserTest, ArrayWithBoolTrue)
 {
     std::stringstream           json("[ true ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -56,7 +62,8 @@ TEST(YamlParserTest, ArrayWithBoolTrue)
 TEST(YamlParserTest, ArrayWithBoolFalse)
 {
     std::stringstream           json("[ false ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -65,7 +72,8 @@ TEST(YamlParserTest, ArrayWithBoolFalse)
 TEST(YamlParserTest, ArrayWithNull)
 {
     std::stringstream           json("[ null ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -74,7 +82,8 @@ TEST(YamlParserTest, ArrayWithNull)
 TEST(YamlParserTest, ArrayWithArray)
 {
     std::stringstream           json("[ [] ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -83,7 +92,8 @@ TEST(YamlParserTest, ArrayWithArray)
 TEST(YamlParserTest, ArrayWithMap)
 {
     std::stringstream           json("[ {} ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -92,7 +102,8 @@ TEST(YamlParserTest, ArrayWithMap)
 TEST(YamlParserTest, MapWithNumber)
 {
     std::stringstream           json("{ \"item\":1 }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -101,7 +112,8 @@ TEST(YamlParserTest, MapWithNumber)
 TEST(YamlParserTest, MapWithString)
 {
     std::stringstream           json("{ \"item\":\"String\" }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -110,7 +122,8 @@ TEST(YamlParserTest, MapWithString)
 TEST(YamlParserTest, MapWithBoolTrue)
 {
     std::stringstream           json("{ \"item\":true }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -119,7 +132,8 @@ TEST(YamlParserTest, MapWithBoolTrue)
 TEST(YamlParserTest, MapWithBoolFalse)
 {
     std::stringstream           json("{ \"item\":false }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -128,7 +142,8 @@ TEST(YamlParserTest, MapWithBoolFalse)
 TEST(YamlParserTest, MapWithNull)
 {
     std::stringstream           json("{ \"item\":null }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -137,7 +152,8 @@ TEST(YamlParserTest, MapWithNull)
 TEST(YamlParserTest, MapWithArray)
 {
     std::stringstream           json("{ \"item\":[] }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -146,7 +162,8 @@ TEST(YamlParserTest, MapWithArray)
 TEST(YamlParserTest, MapWithMap)
 {
     std::stringstream           json("{ \"item\":{} }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -155,7 +172,8 @@ TEST(YamlParserTest, MapWithMap)
 TEST(YamlParserTest, MultiItemArray)
 {
     std::stringstream           json("[ 12, \"String\", true, false, null, { \"Item\": 1, \"Plop\": 2}, [ 1, 2] ]");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -164,7 +182,8 @@ TEST(YamlParserTest, MultiItemArray)
 TEST(YamlParserTest, MultiItemMap)
 {
     std::stringstream           json("{ \"I1\": 12, \"I2\": \"String\", \"I3\": true, \"I4\": false, \"I5\": null, \"I6\": { \"Item\": 1, \"Plop\": 2}, \"I7\": [ 1, 2] }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);
@@ -173,7 +192,8 @@ TEST(YamlParserTest, MultiItemMap)
 TEST(YamlParserTest, BadMapValue)
 {
     std::stringstream           json("{ \"I1\": ] }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_THROW(parser.parse(), ThorsAnvil::Parser::ParsingError);
@@ -182,7 +202,8 @@ TEST(YamlParserTest, BadMapValue)
 TEST(YamlParserTest, BadArrayValue)
 {
     std::stringstream           json("{ ] }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_THROW(parser.parse(), ThorsAnvil::Parser::ParsingError);
@@ -191,7 +212,8 @@ TEST(YamlParserTest, BadArrayValue)
 TEST(YamlParserTest, BadMapMissingComma)
 {
     std::stringstream           json("{ \"I1\": 12 \"I2\": 13 }");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_THROW(parser.parse(), ThorsAnvil::Parser::ParsingError);
@@ -200,7 +222,8 @@ TEST(YamlParserTest, BadMapMissingComma)
 TEST(YamlParserTest, HighLevelObject)
 {
     std::stringstream           json("12");
-    ParserCleanInterface        interface;
+    KeyGenVisitor               keyGenerator;
+    ParserCleanInterface        interface(keyGenerator);
     YamlParser                  parser(json, interface);
 
     ASSERT_TRUE(parser.parse() == 0);

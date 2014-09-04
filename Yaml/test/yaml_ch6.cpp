@@ -11,6 +11,7 @@ using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
 using ThorsAnvil::Parser::ParserDomInterface;
 using ThorsAnvil::Parser::ParserObjectType;
+using ThorsAnvil::Parser::KeyGenVisitor;
 
 extern std::string getExpected(std::string const& file);
 extern void CheckResults(YamlParser& parser, ParserDomInterface& domBuilder, ParserObjectType type, std::string const& expectedResult);
@@ -139,7 +140,8 @@ TEST(Yaml_Ch6, PrimaryTagHandle)
     std::string       output1{ "\"bar\""  };
     std::string       output2{ "\"bar\""  };
 
-    ParserDomInterface  domBuilder;
+    KeyGenVisitor       keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserValueObject, output1);
@@ -181,7 +183,8 @@ TEST(Yaml_Ch6, LocalTagPrefix)
     std::string       output1{ "\"fluorescent\""  };
     std::string       output2{ "\"green\""  };
 
-    ParserDomInterface  domBuilder;
+    KeyGenVisitor       keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserValueObject, output1);

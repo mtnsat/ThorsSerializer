@@ -1,6 +1,7 @@
 
 #include "gtest/gtest.h"
 #include "YamlParser.h"
+#include "YamlScanner.h"
 #include "Parser/ParserDom.h"
 #include "Parser/ParserDomVisit.h"
 #include "Parser/ParserInterface.h"
@@ -9,6 +10,7 @@
 #include <string>
 
 using ThorsAnvil::Yaml::YamlParser;
+using ThorsAnvil::Yaml::YamlKeyGen;
 using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
 using ThorsAnvil::Parser::ParserDomInterface;
@@ -38,7 +40,8 @@ void CheckResults(YamlParser& parser, ParserDomInterface& domBuilder, ParserObje
 
 void runTest(ParserObjectType type, std::istream& input, std::string const& expectedResult)
 {
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, type, expectedResult);
@@ -139,7 +142,8 @@ TEST(Yaml_Ch2,   TwoDocumentsInAStream)
     std::string       output1{ "[\"Mark McGwire\", \"Sammy Sosa\", \"Ken Griffey\"]" };
     std::string       output2{ "[\"Chicago Cubs\", \"St Louis Cardinals\"]" };
 
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserArrayObject, output1);
@@ -162,7 +166,8 @@ TEST(Yaml_Ch2,  PlayByPlayFeed)
     std::string       output1{ "{\"action\": \"strike (miss)\", \"player\": \"Sammy Sosa\", \"time\": \"20:03:20\"}" };
     std::string       output2{ "{\"action\": \"grand slam\", \"player\": \"Sammy Sosa\", \"time\": \"20:03:47\"}" };
 
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
     CheckResults(parser, domBuilder, ThorsAnvil::Parser::ParserMapObject, output1);
@@ -519,7 +524,8 @@ TEST(Yaml_Ch2, LogFile)
     std::ifstream jsonoutput("test/data/LogFile.json");
 
     std::string         output;
-    ParserDomInterface  domBuilder;
+    YamlKeyGen          keyGenerator;
+    ParserDomInterface  domBuilder(keyGenerator);
     YamlParser          parser(input, domBuilder);
 
 
