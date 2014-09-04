@@ -1,13 +1,12 @@
 
-#ifndef THORSANVIL_PARSER_PARSER_DOM
-#define THORSANVIL_PARSER_PARSER_DOM
+#ifndef THORSANVIL_PARSER_PARSER_DOM_H
+#define THORSANVIL_PARSER_PARSER_DOM_H
 
 #include "ParserException.h"
+#include "ParserCommon.h"
 
 #include <boost/ptr_container/ptr_vector.hpp>
 #include <boost/ptr_container/ptr_map.hpp>
-#include <sstream>
-#include <algorithm>
 
 namespace ThorsAnvil
 {
@@ -39,10 +38,11 @@ namespace ThorsAnvil
  */
 struct ParserValue;
 struct ParserInterface;
-//typedef boost::ptr_map<std::string, ParserValue> ParserMap;
+struct ParserValueVisitor;
+struct ParserValueConstVisitor;
+
 class ParserMap
 {
-    typedef boost::ptr_map<std::string, ParserValue> Storage; 
     Storage     mapData;
     Storage     keyData;
 
@@ -64,12 +64,18 @@ class ParserMap
         void            transfer(iterator, ParserMap&);
         void            erase(iterator);
         ParserValue&        operator[](std::string const& key)          {return mapData[key];}
-        friend std::ostream& operator<<(std::ostream& stream, ParserMap const& node);
+        void    accept(ParserValueConstVisitor& visitor) const;
+        void    accept(ParserValueVisitor& visitor);
 };
 
 
+class ParserArray: public boost::ptr_vector<ParserValue>
+{
+    public:
+        void    accept(ParserValueConstVisitor& visitor) const;
+        void    accept(ParserValueVisitor& visitor);
+};
 
-typedef boost::ptr_vector<ParserValue>           ParserArray;
 typedef std::pair<std::unique_ptr<ParserValue>,std::unique_ptr<ParserValue> >       ParserMapValue;
 typedef std::pair<std::string,std::unique_ptr<ParserValue> >                        ParserMapPair;
 
@@ -115,13 +121,9 @@ template<> struct ParseTrait<std::string>       { typedef std::string  GetType;}
 /*
  * The base type of all values extracted from Parser
  */
-std::ostream& operator<<(std::ostream& stream, ParserValue const& node);
-std::ostream& operator<<(std::ostream& stream, ParserMap   const& node);
-std::ostream& operator<<(std::ostream& stream, ParserArray const& node);
-
 struct ParserValue
 {
-    virtual ~ParserValue()       {}
+    virtual ~ParserValue();
 
     template<typename T>
     T getValue() const
@@ -130,85 +132,78 @@ struct ParserValue
         this->setValue(value);
         return value;
     }
-    virtual std::string keyValue()      const { throw std::runtime_error("Invalid Parser");}
-    virtual void print(std::ostream& /*stream*/) const {throw std::runtime_error("Invalid Parser");}
+    virtual std::string keyValue()                              const   {throw std::runtime_error("Invalid Parser");}
+    virtual void accept(ParserValueConstVisitor& /*visitor*/)   const   {throw std::runtime_error("Invalid Parser");}
+    virtual void accept(ParserValueVisitor& /*visitor*/)                {throw std::runtime_error("Invalid Parser");}
 
     private:
-    virtual void setValue(long&)        const { throw InvalidConversion();}
-    virtual void setValue(double&)      const { throw InvalidConversion();}
-    virtual void setValue(bool&)        const { throw InvalidConversion();}
-    virtual void setValue(std::string&) const { throw InvalidConversion();}
+    virtual void setValue(long&)                                const   {throw InvalidConversion();}
+    virtual void setValue(double&)                              const   {throw InvalidConversion();}
+    virtual void setValue(bool&)                                const   {throw InvalidConversion();}
+    virtual void setValue(std::string&)                         const   {throw InvalidConversion();}
 };
+
 struct ParserStringItem: ParserValue
 {
-    std::unique_ptr<std::string>     value;
+    std::unique_ptr<std::string>    value;
     ParserStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
 
-    virtual std::string keyValue() const              {return *value;}
-    virtual void print(std::ostream& stream) const
-    {
-        std::string escapedString;
-        std::for_each(std::begin(*value), std::end(*value), [&escapedString](char next){
-            switch(next)
-            {
-                case '"':   escapedString   += "\\\"";          break;
-                case '\\':  escapedString   += "\\\\";          break;
-                default:    escapedString   += next;            break;
-           }
-        });
-        stream << '"' << escapedString << '"';
-    }
+    virtual std::string keyValue()                              const   {return *value;}
+    virtual void accept(ParserValueConstVisitor& visitor)       const;
+    virtual void accept(ParserValueVisitor& visitor);
     private:
-        virtual void setValue(std::string&       dst)  const {dst = *value;}
+        virtual void setValue(std::string&       dst)           const   {dst = *value;}
 };
 struct ParserNumberItem: ParserValue
 {
-    int                              base;
-    int                              offset;
-    std::unique_ptr<std::string>     value;
-    ParserNumberItem(std::unique_ptr<std::string>& data): base(0), offset(0), value(std::move(data))   {}
-    ParserNumberItem(int base, int offset, std::unique_ptr<std::string>& data): base(base), offset(offset), value(std::move(data))   {}
+    int                             base;
+    int                             offset;
+    std::unique_ptr<std::string>    value;
+    ParserNumberItem(std::unique_ptr<std::string>& data);
+    ParserNumberItem(int base, int offset, std::unique_ptr<std::string>& data);
 
-    virtual std::string keyValue() const              {return *value;}
-    virtual void print(std::ostream& stream) const    { stream << *value; }
+    virtual std::string keyValue()                              const   {return *value;}
+    virtual void accept(ParserValueConstVisitor& visitor)       const;
+    virtual void accept(ParserValueVisitor& visitor);
     private:
-        virtual void setValue(long&         dst)  const {dst = base == 0 ? std::atol(value->c_str()) : std::strtol(value->c_str() + offset, nullptr, base);}
-        virtual void setValue(double&       dst)  const {dst = base == 0 ? std::atof(value->c_str()) : static_cast<double>(std::strtol(value->c_str() + offset, nullptr, base));}
+        virtual void setValue(long&         dst)                const;
+        virtual void setValue(double&       dst)                const;
 };
 struct ParserBoolItem: ParserValue
 {
     bool                            value;
-    ParserBoolItem(bool data): value(data)       {}
+    ParserBoolItem(bool data): value(data)                              {}
 
-    virtual std::string keyValue() const              {return value ? "true" : "false";}
-    virtual void print(std::ostream& stream) const    { stream << std::boolalpha << value; }
+    virtual std::string keyValue()                              const   {return value ? "true" : "false";}
+    virtual void accept(ParserValueConstVisitor& visitor)       const;
+    virtual void accept(ParserValueVisitor& visitor);
     private:
-        virtual void setValue(bool&         dst)  const {dst = value;}
+        virtual void setValue(bool&         dst)                const   {dst = value;}
 };
 struct ParserNULLItem: ParserValue
 {
-    virtual std::string keyValue() const              { if (!okForKey) {throw std::runtime_error("Using NULL as KEY");} return "null";}
-    virtual void print(std::ostream& stream) const    { stream << "null"; }
+    virtual std::string keyValue()                              const   { if (!okForKey) {throw std::runtime_error("Using NULL as KEY");} return "null";}
+    virtual void accept(ParserValueConstVisitor& visitor)       const;
+    virtual void accept(ParserValueVisitor& visitor);
 
     // JSON it is not OK thus the default false.
     // YAML allows NULL keys in the map.
-    ParserNULLItem(bool okForKey = false)
-        : okForKey(okForKey)
-    {}
+    ParserNULLItem(bool okForKey = false): okForKey(okForKey)           {}
     private:
         bool        okForKey;
-        virtual void setValue(long&         dst)  const {dst= 0;}
-        virtual void setValue(double&       dst)  const {dst= 0.0;}
-        virtual void setValue(bool&         dst)  const {dst= false;}
-        virtual void setValue(std::string&  dst)  const {dst.clear();}
+        virtual void setValue(long&         dst)                const   {dst= 0;}
+        virtual void setValue(double&       dst)                const   {dst= 0.0;}
+        virtual void setValue(bool&         dst)                const   {dst= false;}
+        virtual void setValue(std::string&  dst)                const   {dst.clear();}
 };
 struct ParserMapItem: ParserValue
 {
-    std::unique_ptr<ParserMap>          value;
+    std::unique_ptr<ParserMap>      value;
     ParserMapItem(std::unique_ptr<ParserMap>& data): value(std::move(data))    {}
 
-    virtual std::string keyValue() const              { std::stringstream result;result << (*this);return result.str();}
-    virtual void print(std::ostream& stream) const    { stream << *value; }
+    virtual std::string keyValue()                              const;
+    virtual void accept(ParserValueConstVisitor& visitor)       const;
+    virtual void accept(ParserValueVisitor& visitor);
     private:
 };
 struct ParserArrayItem: ParserValue
@@ -216,52 +211,11 @@ struct ParserArrayItem: ParserValue
     std::unique_ptr<ParserArray>        value;
     ParserArrayItem(std::unique_ptr<ParserArray>& data): value(std::move(data))    {}
 
-    virtual std::string keyValue() const              { std::stringstream result;result << (*this);return result.str();}
-    virtual void print(std::ostream& stream) const    { stream << *value; }
+    virtual std::string keyValue()                              const;
+    virtual void accept(ParserValueConstVisitor& visitor)       const;
+    virtual void accept(ParserValueVisitor& visitor);
     private:
 };
-
-inline std::ostream& operator<<(std::ostream& stream, ParserValue const& node)
-{
-    node.print(stream);
-    return stream;
-}
-inline std::ostream& operator<<(std::ostream& stream, ParserMap const& node)
-{
-    stream << "{";
-    if (!node.empty())
-    {
-        ParserMap::const_iterator loopK = node.keyData.begin();
-        ParserMap::const_iterator loopV = node.mapData.begin();
-
-        stream << (*loopK->second) << ": " << (*loopV->second);
-
-        for(++loopK, ++loopV; loopV != node.mapData.end(); ++loopK, ++loopV)
-        {
-            stream << ", " << (*loopK->second) << ": " << (*loopV->second);
-        }
-    }
-    stream << "}";
-
-    return stream;
-}
-inline std::ostream& operator<<(std::ostream& stream, ParserArray const& node)
-{
-    stream << "[";
-    if (!node.empty())
-    {
-        ParserArray::const_iterator loop = node.begin();
-        stream << (*loop);
-
-        for(++loop; loop != node.end(); ++loop)
-        {
-            stream << ", " << (*loop);
-        }
-    }
-    stream << "]";
-
-    return stream;
-}
 
     }
 }

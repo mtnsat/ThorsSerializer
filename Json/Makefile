@@ -3,10 +3,12 @@
 THORSANVIL_ROOT			= $(realpath ../)
 
 TARGET					= Json.slib
+LINK_LIBS				= Parser
 EXTRA_HEADERS			= ParserShiftReduce.tab.hpp location.hh position.hh stack.hh
 CLEAN_EXTRA				= location.hh position.hh stack.hh
 NOCOVERAGE				= Lexer.lex ParserShiftReduce.tab
 FILE_WARNING_FLAGS		+= -Wno-overloaded-virtual
+
 UNITTEST_LINK_LIBS		= Parser
 
 include ${THORSANVIL_ROOT}/build/tools/Makefile
