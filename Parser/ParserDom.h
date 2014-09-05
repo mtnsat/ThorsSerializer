@@ -132,7 +132,6 @@ struct ParserValue
         this->setValue(value);
         return value;
     }
-    virtual std::string keyValue()                              const   {throw std::runtime_error("Invalid Parser");}
     virtual void accept(ParserValueConstVisitor& /*visitor*/)   const   {throw std::runtime_error("Invalid Parser");}
     virtual void accept(ParserValueVisitor& /*visitor*/)                {throw std::runtime_error("Invalid Parser");}
 
@@ -148,7 +147,6 @@ struct ParserStringItem: ParserValue
     std::unique_ptr<std::string>    value;
     ParserStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
 
-    virtual std::string keyValue()                              const   {return *value;}
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:
@@ -162,7 +160,6 @@ struct ParserNumberItem: ParserValue
     ParserNumberItem(std::unique_ptr<std::string>& data);
     ParserNumberItem(int base, int offset, std::unique_ptr<std::string>& data);
 
-    virtual std::string keyValue()                              const   {return *value;}
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:
@@ -174,7 +171,6 @@ struct ParserBoolItem: ParserValue
     bool                            value;
     ParserBoolItem(bool data): value(data)                              {}
 
-    virtual std::string keyValue()                              const   {return value ? "true" : "false";}
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:
@@ -182,15 +178,12 @@ struct ParserBoolItem: ParserValue
 };
 struct ParserNULLItem: ParserValue
 {
-    virtual std::string keyValue()                              const   { if (!okForKey) {throw std::runtime_error("Using NULL as KEY");} return "null";}
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
 
     // JSON it is not OK thus the default false.
     // YAML allows NULL keys in the map.
-    ParserNULLItem(bool okForKey = false): okForKey(okForKey)           {}
     private:
-        bool        okForKey;
         virtual void setValue(long&         dst)                const   {dst= 0;}
         virtual void setValue(double&       dst)                const   {dst= 0.0;}
         virtual void setValue(bool&         dst)                const   {dst= false;}
@@ -201,7 +194,6 @@ struct ParserMapItem: ParserValue
     std::unique_ptr<ParserMap>      value;
     ParserMapItem(std::unique_ptr<ParserMap>& data): value(std::move(data))    {}
 
-    virtual std::string keyValue()                              const;
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:
@@ -211,7 +203,6 @@ struct ParserArrayItem: ParserValue
     std::unique_ptr<ParserArray>        value;
     ParserArrayItem(std::unique_ptr<ParserArray>& data): value(std::move(data))    {}
 
-    virtual std::string keyValue()                              const;
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:

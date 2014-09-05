@@ -144,7 +144,7 @@ std::unique_ptr<ParserValue> YamlParser::getScalar(yaml_event_t const& event)
     }
 
     // std::cout << "Scalar: ->" << eventValue << "<-\n";
-    if (eventValue == "null" || eventValue == "Null" || eventValue == "NULL" || eventValue == "~" || eventValue == "")      {return std::unique_ptr<ParserValue>(pi.valueParseNULL(true));}
+    if (eventValue == "null" || eventValue == "Null" || eventValue == "NULL" || eventValue == "~" || eventValue == "")      {return std::unique_ptr<ParserValue>(pi.valueParseNULL());}
     if (eventValue == "true" || eventValue == "True" || eventValue == "TRUE")       {return std::unique_ptr<ParserValue>(pi.valueParseBool(true));}
     if (eventValue == "false" || eventValue == "False" || eventValue == "FALSE")    {return std::unique_ptr<ParserValue>(pi.valueParseBool(false));}
 

@@ -92,9 +92,9 @@ class ScannerBaseSax
 
     private:
         friend class ScannerSaxInterface;
-        void    preActivate(ParserValue const& mapItem);
+        void    preActivate(std::string const& key);
         void    preActivate(int index);
-        void    activate(ParserValue const& mapItem, ParserValue const& value);
+        void    activate(std::string const& key, ParserValue const& value);
         void    activate(int index, ParserValue const& value);
 
         SaxAction* getAction(std::string const& item);
@@ -124,10 +124,10 @@ class ScannerSaxInterface: public ParserCleanInterface
     virtual void            mapClose()                                          { parent.pop_mapAction();}
     virtual ParserValue*    mapKeyNote(ParserValue* k)                          {
                                                                                   std::unique_ptr<ParserValue> ak(k);
-                                                                                  parent.preActivate(*ak);
+                                                                                  parent.preActivate(mapValueToKey(*ak));
                                                                                   return ak.release();
                                                                                 }
-    virtual ParserMapValue* mapCreateElement(ParserValue* k,ParserValue* val)   { std::unique_ptr<ParserValue> ak(k);   std::unique_ptr<ParserValue> aval(val); parent.activate(*ak, *aval); return NULL;}
+    virtual ParserMapValue* mapCreateElement(ParserValue* k,ParserValue* val)   { std::unique_ptr<ParserValue> ak(k);   std::unique_ptr<ParserValue> aval(val); parent.activate(mapValueToKey(*ak), *aval); return NULL;}
     virtual void            arrayOpen()                                         { currentArrayIndex.push_front(0); parent.push_arrAction(); parent.preActivate(currentArrayIndex.front());}
     virtual void            arrayClose()                                        { currentArrayIndex.pop_front();   parent.pop_arrAction();}
     virtual ParserArray*    arrayNote(ParserArray* arr)                         { std::unique_ptr<ParserArray>   aarr(arr); parent.preActivate(currentArrayIndex.front());return NULL;}
@@ -136,7 +136,7 @@ class ScannerSaxInterface: public ParserCleanInterface
     virtual ParserValue*    valueParseNumber(int b, int o, std::string* num)    { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(b, o, anum);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
     virtual ParserValue*    valueParseBool(bool val)                            {                                         return new ParserBoolItem(val);}
-    virtual ParserValue*    valueParseNULL(bool okKey = false)                  {                                         return new ParserNULLItem(okKey);}
+    virtual ParserValue*    valueParseNULL()                                    {                                         return new ParserNULLItem();}
 };
 
 template<typename KeyGenerator>

@@ -49,6 +49,7 @@ struct KeyGenVisitor: public ParserValueConstVisitor
     virtual void visit(ParserMap const&, Storage const&, Storage const&) {}
     virtual void visit(ParserArray const&)             {}
     virtual std::string  getKey() { return "";}
+    virtual void         reset()  {}
 };
 struct ParserInterface
 {
@@ -59,9 +60,9 @@ struct ParserInterface
     virtual ~ParserInterface()  {}
     std::string mapValueToKey(ParserValue& key)
     {
-       //key.accept(keyGenVisitor);
-       //return keyGenVisitor.getKey();
-        return key.keyValue();
+        keyGenVisitor.reset();
+        key.accept(keyGenVisitor);
+        return keyGenVisitor.getKey();
     }
     virtual void            done(ParserObjectType type, ParserValue* result)    = 0;
     virtual void            mapOpen()                                           = 0;
@@ -84,7 +85,7 @@ struct ParserInterface
     virtual ParserValue*    valueParseNumber(int base, int off, std::string* n) = 0;
     virtual ParserValue*    valueParseNumber(std::string* num)                  = 0;
     virtual ParserValue*    valueParseBool(bool value)                          = 0;
-    virtual ParserValue*    valueParseNULL(bool okKey = false)                  = 0;
+    virtual ParserValue*    valueParseNULL()                                    = 0;
 };
 
 struct ParserCleanInterface: ParserInterface
@@ -113,7 +114,7 @@ struct ParserCleanInterface: ParserInterface
     virtual ParserValue*    valueParseNumber(int, int, std::string* num)        { delete num; return NULL;}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { delete num; return NULL;}
     virtual ParserValue*    valueParseBool(bool)                                { return NULL;}
-    virtual ParserValue*    valueParseNULL(bool)                                { return NULL;}
+    virtual ParserValue*    valueParseNULL()                                    { return NULL;}
 };
 
 template<typename T = ParserCleanInterface>
@@ -163,7 +164,7 @@ struct ParserLogInterface: ParserInterface
     virtual ParserValue*    valueParseNumber(int base, int off, std::string* n) {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(base, off, n);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(num);}
     virtual ParserValue*    valueParseBool(bool val)                            {std::cout << "ParserValue: ParserTrue\n";                                    return actualInterface.valueParseBool(val);}
-    virtual ParserValue*    valueParseNULL(bool okKey = false)                  {std::cout << "ParserValue: ParserFalse\n";                                   return actualInterface.valueParseNULL(okKey);}
+    virtual ParserValue*    valueParseNULL()                                    {std::cout << "ParserValue: ParserFalse\n";                                   return actualInterface.valueParseNULL();}
 };
 
 struct ParserDomInterface: ParserCleanInterface
@@ -198,7 +199,7 @@ struct ParserDomInterface: ParserCleanInterface
     virtual ParserValue*    valueParseNumber(int b, int o, std::string* num)    { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(b, o, anum);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
     virtual ParserValue*    valueParseBool(bool value)                          { return new ParserBoolItem(value);}
-    virtual ParserValue*    valueParseNULL(bool okKey = false)                  { return new ParserNULLItem(okKey);}
+    virtual ParserValue*    valueParseNULL()                                    { return new ParserNULLItem();}
 
     ParserObjectType                type;
     std::unique_ptr<ParserValue>    result;

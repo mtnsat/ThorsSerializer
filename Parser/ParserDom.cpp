@@ -64,15 +64,6 @@ void ParserNULLItem::accept(ParserValueVisitor& visitor)
     visitor.visit(*this);
 }
 
-std::string ParserMapItem::keyValue() const
-{
-    std::stringstream result;
-    ParserValueJsonPrinter  printer(result);
-    accept(printer);
-
-    return result.str();
-}
-
 void ParserMapItem::accept(ParserValueConstVisitor& visitor) const
 {
     visitor.visit(*this);
@@ -81,15 +72,6 @@ void ParserMapItem::accept(ParserValueConstVisitor& visitor) const
 void ParserMapItem::accept(ParserValueVisitor& visitor)
 {
     visitor.visit(*this);
-}
-
-std::string ParserArrayItem::keyValue() const
-{
-    std::stringstream result;
-    ParserValueJsonPrinter  printer(result);
-    accept(printer);
-
-    return result.str();
 }
 
 void ParserArrayItem::accept(ParserValueConstVisitor& visitor) const

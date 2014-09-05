@@ -89,9 +89,8 @@ SaxAction* ScannerBaseSax::getAction(int index)
     return action;
 }
 
-void ScannerBaseSax::preActivate(ParserValue const& mapItem)
+void ScannerBaseSax::preActivate(std::string const& key)
 {
-    std::string key = mapItem.keyValue();
     SaxAction*  action = getAction(key);
     if (action != NULL)
     {
@@ -107,9 +106,8 @@ void ScannerBaseSax::preActivate(int index)
     }
 }
 
-void ScannerBaseSax::activate(ParserValue const& mapItem, ParserValue const& value)
+void ScannerBaseSax::activate(std::string const& key, ParserValue const& value)
 {
-    std::string key = mapItem.keyValue();
     SaxAction*  action = getAction(key);
     if (action != NULL)
     {
