@@ -43,21 +43,6 @@ struct ParserValueConstVisitor
     virtual void visit(ParserArray const& item)             = 0;
 };
 
-struct ParserValueJsonPrinter: public ParserValueConstVisitor
-{
-    std::ostream&                       stream;
-
-    ParserValueJsonPrinter(std::ostream& stream);
-    virtual void visit(ParserStringItem const& item);
-    virtual void visit(ParserNumberItem const& item);
-    virtual void visit(ParserBoolItem const& item);
-    virtual void visit(ParserNULLItem const&);
-    virtual void visit(ParserMapItem const& item);
-    virtual void visit(ParserArrayItem const& item);
-    virtual void visit(ParserMap const& node, Storage const& mapData, Storage const& keyData);
-    virtual void visit(ParserArray const& node);
-};
-
     }
 }
 

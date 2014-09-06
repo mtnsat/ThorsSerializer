@@ -2,6 +2,7 @@
 #include "gtest/gtest.h"
 #include "YamlParser.h"
 #include "YamlScanner.h"
+#include "Json/DomSerialize.h"
 #include "Parser/ParserDom.h"
 #include "Parser/ParserDomVisit.h"
 #include "Parser/ParserInterface.h"
@@ -11,11 +12,11 @@
 
 using ThorsAnvil::Yaml::YamlParser;
 using ThorsAnvil::Yaml::YamlKeyGen;
+using ThorsAnvil::Json::DomSerialize;
 using ThorsAnvil::Parser::ParserMap;
 using ThorsAnvil::Parser::ParserArray;
 using ThorsAnvil::Parser::ParserDomInterface;
 using ThorsAnvil::Parser::ParserObjectType;
-using ThorsAnvil::Parser::ParserValueJsonPrinter;
 
 std::string getExpected(std::string const& file)
 {
@@ -32,8 +33,7 @@ void CheckResults(YamlParser& parser, ParserDomInterface& domBuilder, ParserObje
     ASSERT_EQ(domBuilder.type, type);
 
     std::stringstream result;
-    ParserValueJsonPrinter  printer(result);
-    domBuilder.result->accept(printer);
+    result << DomSerialize(*domBuilder.result);
 
     ASSERT_EQ(expectedResult, result.str());
 }
