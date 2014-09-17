@@ -17,21 +17,33 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
         : emitter(stream)
     {}
 
+    void doWrite(std::function<void(std::string const&, std::string const&, int, int, int)> action, Parser::ParserValue const& item)
+    {
+        std::string const&  anchor          = item.getAttribute("anchor");
+        std::string const&  tag             = item.getAttribute("tag");
+        int                 plain_implicit  = std::stoi(item.getAttribute("plain_implicit"));
+        int                 quoted_implicit = std::stoi(item.getAttribute("quoted_implicit"));
+        int                 style           = std::stoi(item.getAttribute("style"));
+
+        action(anchor, tag, plain_implicit, quoted_implicit, style);
+    }
+
+
     virtual void visit(Parser::ParserStringItem const& item)
     {
-        emitter.writeString(*item.value);
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeString(*item.value, anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserNumberItem const& item)
     {
-        emitter.writeNumber(*item.value);
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNumber(*item.value, anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserBoolItem const& item)
     {
-        emitter.writeBool(item.value?"true":"false");
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeBool(item.value?"true":"false", anchor, tag, pi, qi, s);}, item);
     }
-    virtual void visit(Parser::ParserNULLItem const&)
+    virtual void visit(Parser::ParserNULLItem const& item)
     {
-        emitter.writeNull("null");
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNull("null", anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserMapItem const& item)
     {

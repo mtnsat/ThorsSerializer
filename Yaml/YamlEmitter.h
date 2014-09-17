@@ -23,10 +23,10 @@ class YamlEmitter
         YamlEmitter(std::ostream& stream);
         ~YamlEmitter();
 
-        void writeString(std::string const& value);
-        void writeNumber(std::string const& value);
-        void writeBool(std::string const& value);
-        void writeNull(std::string const& value);
+        void writeString(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
+        void writeNumber(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
+        void writeBool(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
+        void writeNull(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
         void writeMapStart();
         void writeMapEnd();
         void writeArrayStart();

@@ -47,7 +47,7 @@ TEST(YamlSerialize, SequenceOfScalars)
                                 "- Sammy Sosa\n"
                                 "- Ken Griffey\n"
                            };
-    std::string       output{   "- 'Mark McGwire'\n- 'Sammy Sosa'\n- 'Ken Griffey'\n" };
+    std::string       output{   "- Mark McGwire\n- Sammy Sosa\n- Ken Griffey\n" };
 
     runTest1(ThorsAnvil::Parser::ParserArrayObject, input, output);
 }
@@ -58,7 +58,7 @@ TEST(YamlSerialize, MappingScalarsToScalars)
                                 "avg: 0.278 # Batting average\n"
                                 "rbi: 147   # Runs Batted In\n"
                            };
-    std::string       output{   "'avg': 0.278\n'hr': 65\n'rbi': 147\n" };
+    std::string       output{   "avg: 0.278\nhr: 65\nrbi: 147\n" };
 
     runTest1(ThorsAnvil::Parser::ParserMapObject, input, output);
 }
@@ -71,7 +71,7 @@ TEST(YamlSerialize, Integers)
                                 "octal: 0o14\n"
                                 "hexadecimal: 0xC\n"
                            };
-    std::string       output{ "'canonical': 12345\n'decimal': +12345\n'hexadecimal': 0xC\n'octal': 0o14\n" };
+    std::string       output{ "canonical: 12345\ndecimal: +12345\nhexadecimal: 0xC\noctal: 0o14\n" };
 
     runTest1(ThorsAnvil::Parser::ParserMapObject, input, output);
 }
@@ -84,7 +84,7 @@ TEST(YamlSerialize, FloatingPoint)
                                 "negative infinity: -.inf\n"
                                 "not a number: .NaN\n"
                            };
-    std::string       output{  "'canonical': 1.23015e+3\n'exponential': 12.3015e+02\n'fixed': 1230.15\n'negative infinity': -.inf\n'not a number': .NaN\n" };
+    std::string       output{  "canonical: 1.23015e+3\nexponential: 12.3015e+02\nfixed: 1230.15\nnegative infinity: -.inf\nnot a number: .NaN\n" };
 
     runTest1(ThorsAnvil::Parser::ParserMapObject, input, output);
 }
@@ -96,7 +96,7 @@ TEST(YamlSerialize, Miscellaneous)
                                 "booleans: [ true, false ]\n"
                                 "string: '012345'\n"
                            };
-    std::string       output{ "'booleans':\n- true\n- false\nnull: null\n'string': '012345'\n" };
+    std::string       output{ "booleans:\n- true\n- false\nnull: null\nstring: '012345'\n" };
 
     runTest1(ThorsAnvil::Parser::ParserMapObject, input, output);
 }

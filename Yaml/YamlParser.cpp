@@ -275,6 +275,18 @@ void YamlParser::push_scalarValue(yaml_event_t const& event)
 {
     // std::cout << "push_scalarValue()\n";
     std::unique_ptr<ParserValue>    scalar(getScalar(event));
+    if (scalar.get())
+    {
+        if (event.data.scalar.anchor)
+        {   scalar->setAttribute("anchor",          reinterpret_cast<char*>(event.data.scalar.anchor));
+        }
+        if (event.data.scalar.tag)
+        {   scalar->setAttribute("tag",             reinterpret_cast<char*>(event.data.scalar.tag));
+        }
+        scalar->setAttribute("plain_implicit",  std::to_string(event.data.scalar.plain_implicit));
+        scalar->setAttribute("quoted_implicit", std::to_string(event.data.scalar.quoted_implicit));
+        scalar->setAttribute("style",           std::to_string(event.data.scalar.style));
+    }
 
     addToken(Parser::ParserValueObject, std::move(scalar));
 }

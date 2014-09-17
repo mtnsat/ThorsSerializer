@@ -69,41 +69,48 @@ int YamlEmitter::writeHandler(unsigned char* buffer, std::size_t size)
    YAML_FOLDED_SCALAR_STYLE
 #endif
 
-void YamlEmitter::writeString(std::string const& value)
+yaml_char_t* convertStringToYamlCharPtr(std::string const& value)
+{
+    if (value == "")
+    {   return nullptr;
+    }
+    return reinterpret_cast<yaml_char_t*>(const_cast<char*>(value.c_str()));
+}
+void YamlEmitter::writeString(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
 {
     yaml_event_t    event;
     unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, /*anchor*/nullptr, /*tag*/nullptr, data, value.size(), /*plain_implicit*/0,  /*quoted_implicit*/1, YAML_ANY_SCALAR_STYLE) || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
     {
         throw std::runtime_error("YamlEmitter::writeString: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeNumber(std::string const& value)
+void YamlEmitter::writeNumber(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
 {
     yaml_event_t    event;
     unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, /*anchor*/nullptr, /*tag*/nullptr, data, value.size(), /*plain_implicit*/1,  /*quoted_implicit*/0, YAML_PLAIN_SCALAR_STYLE) || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
     {
         throw std::runtime_error("YamlEmitter::writeNumber: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeBool(std::string const& value)
+void YamlEmitter::writeBool(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
 {
     yaml_event_t    event;
     unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, /*anchor*/nullptr, /*tag*/nullptr, data, value.size(), /*plain_implicit*/1,  /*quoted_implicit*/0, YAML_PLAIN_SCALAR_STYLE) || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
     {
         throw std::runtime_error("YamlEmitter::writeBool: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeNull(std::string const& value)
+void YamlEmitter::writeNull(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
 {
     yaml_event_t    event;
     unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, /*anchor*/nullptr, /*tag*/nullptr, data, value.size(), /*plain_implicit*/1,  /*quoted_implicit*/0, YAML_PLAIN_SCALAR_STYLE) || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
     {
         throw std::runtime_error("YamlEmitter::writeNull: Failed scalar_event_initialize");
     }

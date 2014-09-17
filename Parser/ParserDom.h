@@ -123,6 +123,12 @@ template<> struct ParseTrait<std::string>       { typedef std::string  GetType;}
  */
 struct ParserValue
 {
+    private:
+    typedef std::map<std::string, std::string>              Attributes;
+    public:
+    typedef Attributes::iterator            AttrIterator;
+    typedef Attributes::const_iterator      AttrConstIterator;
+
     virtual ~ParserValue();
 
     template<typename T>
@@ -135,7 +141,19 @@ struct ParserValue
     virtual void accept(ParserValueConstVisitor& /*visitor*/)   const   {throw std::runtime_error("Invalid Parser");}
     virtual void accept(ParserValueVisitor& /*visitor*/)                {throw std::runtime_error("Invalid Parser");}
 
+    void                setAttribute(std::string const& name, std::string const& v)             {attributes[name] = v;}
+    void                delAttribute(std::string const& name)                                   {attributes.erase(attributes.find(name));}
+    std::string         getAttribute(std::string const& name, std::string const& d = "") const
+    {
+        auto find = attributes.find(name);
+        if (find == attributes.end())
+        {   return d;
+        }
+        return find->second;
+    }
+
     private:
+    Attributes              attributes;
     virtual void setValue(long&)                                const   {throw InvalidConversion();}
     virtual void setValue(double&)                              const   {throw InvalidConversion();}
     virtual void setValue(bool&)                                const   {throw InvalidConversion();}
