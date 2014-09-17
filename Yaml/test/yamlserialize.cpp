@@ -96,7 +96,7 @@ TEST(YamlSerialize, Miscellaneous)
                                 "booleans: [ true, false ]\n"
                                 "string: '012345'\n"
                            };
-    std::string       output{ "booleans:\n- true\n- false\nnull: null\nstring: '012345'\n" };
+    std::string       output{ "booleans: [true, false]\nnull: null\nstring: '012345'\n" };
 
     runTest1(ThorsAnvil::Parser::ParserMapObject, input, output);
 }

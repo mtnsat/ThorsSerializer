@@ -28,6 +28,15 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
         action(anchor, tag, plain_implicit, quoted_implicit, style);
     }
 
+    void doWriteContainer(std::function<void(std::string const& anchor, std::string const& tag, int i, int s)> action, Parser::ParserValue const& item)
+    {
+        std::string const&  anchor          = item.getAttribute("anchor");
+        std::string const&  tag             = item.getAttribute("tag");
+        int                 implicit        = std::stoi(item.getAttribute("implicit"));
+        int                 style           = std::stoi(item.getAttribute("style"));
+
+        action(anchor, tag, implicit, style);
+    }
 
     virtual void visit(Parser::ParserStringItem const& item)
     {
@@ -47,24 +56,24 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
     }
     virtual void visit(Parser::ParserMapItem const& item)
     {
+        doWriteContainer([this](std::string const& anchor, std::string const& tag, int i, int s){this->emitter.writeMapStart(anchor, tag, i, s);}, item);
         item.value->accept(*this);
+        emitter.writeMapEnd();
     }
     virtual void visit(Parser::ParserArrayItem const& item)
     {
+        doWriteContainer([this](std::string const& anchor, std::string const& tag, int i, int s){this->emitter.writeArrayStart(anchor, tag, i, s);}, item);
         item.value->accept(*this);
+        emitter.writeArrayEnd();
     }
     virtual void visit(Parser::ParserArray const& node)
     {
-        emitter.writeArrayStart();
         for(auto loop = node.begin(); loop != node.end(); ++loop)
         {   loop->accept(*this);
         }
-        emitter.writeArrayEnd();
     }
     virtual void visit(Parser::ParserMap const& /*node*/, Parser::Storage const& mapData, Parser::Storage const& keyData)
     {
-        emitter.writeMapStart();
-
         Parser::ParserMap::const_iterator loopK = keyData.begin();
         Parser::ParserMap::const_iterator loopV = mapData.begin();
 
@@ -73,8 +82,6 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
             loopK->second->accept(*this);
             loopV->second->accept(*this);
         }
-
-        emitter.writeMapEnd();
     }
 };
 

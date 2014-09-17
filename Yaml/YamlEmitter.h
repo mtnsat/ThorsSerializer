@@ -27,9 +27,9 @@ class YamlEmitter
         void writeNumber(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
         void writeBool(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
         void writeNull(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style);
-        void writeMapStart();
+        void writeMapStart(std::string const& anchor, std::string const& tag, int implicit, int style);
         void writeMapEnd();
-        void writeArrayStart();
+        void writeArrayStart(std::string const& anchor, std::string const& tag, int implicit, int style);
         void writeArrayEnd();
 };
 

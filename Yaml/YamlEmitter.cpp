@@ -121,13 +121,13 @@ void YamlEmitter::writeNull(std::string const& value, std::string const& anchor,
     YAML_BLOCK_MAPPING_STYLE    The block mapping style.
     YAML_FLOW_MAPPING_STYLE     The flow mapping style.
 #endif
-void YamlEmitter::writeMapStart()
+void YamlEmitter::writeMapStart(std::string const& anchor, std::string const& tag, int implicit, int style)
 {
     /* Note:
        Either Tag or implicit must be set
     */
     yaml_event_t    event;
-    if (!yaml_mapping_start_event_initialize(&event, /*anchor*/nullptr, /*tag*/nullptr, /*implicit*/1, YAML_ANY_MAPPING_STYLE)   || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_mapping_start_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), implicit, static_cast<yaml_mapping_style_t>(style))   || !yaml_emitter_emit(&emitter, &event))
     {
         throw std::runtime_error("YamlEmitter::writeMapStart: Failed scalar_event_initialize");
     }
@@ -154,13 +154,13 @@ void YamlEmitter::writeMapEnd()
   YAML_FLOW_SEQUENCE_STYLE
 #endif
 
-void YamlEmitter::writeArrayStart()
+void YamlEmitter::writeArrayStart(std::string const& anchor, std::string const& tag, int implicit, int style)
 {
     /* Note:
        Either Tag or implicit must be set
     */
     yaml_event_t    event;
-    if (!yaml_sequence_start_event_initialize(&event, /*anchor*/nullptr, /*tag*/nullptr, /*implicit*/1, YAML_ANY_SEQUENCE_STYLE) || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_sequence_start_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), implicit, static_cast<yaml_sequence_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
     {
         throw std::runtime_error("YamlEmitter::writeArrayStart: Failed sequence_start_event_initialize");
     }

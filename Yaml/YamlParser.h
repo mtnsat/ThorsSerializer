@@ -55,6 +55,10 @@ class YamlParser: public Parser::LexerParser
         bool                                    first;
         std::unique_ptr<Parser::ParserValue>    key;
         bool                                    keySet;
+        std::string                             anchor;
+        std::string                             tag;
+        int                                     implicit;
+        int                                     style;
         YamlHierarchyObject(YamlHierarchyObject const&)             = delete;
         YamlHierarchyObject& operator=(YamlHierarchyObject const&)  = delete;
 
@@ -67,19 +71,27 @@ class YamlParser: public Parser::LexerParser
             , key(nullptr)
             , keySet(false)
         {}
-        YamlHierarchyObject(Parser::ParserArray* val)
+        YamlHierarchyObject(Parser::ParserArray* val, yaml_event_t const& event)
             : obj(val)
             , set(val != nullptr)
             , first(true)
             , key(nullptr)
             , keySet(false)
+            , anchor(event.data.sequence_start.anchor ? reinterpret_cast<char*>(event.data.sequence_start.anchor) : "")
+            , tag(event.data.sequence_start.tag       ? reinterpret_cast<char*>(event.data.sequence_start.tag)    : "")
+            , implicit(event.data.sequence_start.implicit)
+            , style(event.data.sequence_start.style)
         {}
-        YamlHierarchyObject(Parser::ParserMap* val)
+        YamlHierarchyObject(Parser::ParserMap* val, yaml_event_t const& event)
             : obj(val)
             , set(val != nullptr)
             , first(true)
             , key(nullptr)
             , keySet(false)
+            , anchor(event.data.mapping_start.anchor ? reinterpret_cast<char*>(event.data.mapping_start.anchor) : "")
+            , tag(event.data.mapping_start.tag       ? reinterpret_cast<char*>(event.data.mapping_start.tag)    : "")
+            , implicit(event.data.mapping_start.implicit)
+            , style(event.data.mapping_start.style)
         {}
         YamlHierarchyObject(YamlHierarchyObject&& move)
             : obj(std::move(move.obj))

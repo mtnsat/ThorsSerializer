@@ -291,10 +291,10 @@ void YamlParser::push_scalarValue(yaml_event_t const& event)
     addToken(Parser::ParserValueObject, std::move(scalar));
 }
 
-void YamlParser::push_array(yaml_event_t const&)
+void YamlParser::push_array(yaml_event_t const& event)
 {
     pi.arrayOpen();
-    hierarchy.emplace_back(static_cast<Parser::ParserArray*>(nullptr));
+    hierarchy.emplace_back(static_cast<Parser::ParserArray*>(nullptr), event);
 }
 void YamlParser::pop_array(yaml_event_t const&)
 {
@@ -307,14 +307,21 @@ void YamlParser::pop_array(yaml_event_t const&)
     pi.arrayClose();
 
     std::unique_ptr<ParserValue>  array{pi.valueParseArray(back.obj.data.array)};
+    if (array.get())
+    {
+        array->setAttribute("anchor",      back.anchor);
+        array->setAttribute("tag",         back.tag);
+        array->setAttribute("implicit",    std::to_string(back.implicit));
+        array->setAttribute("style",       std::to_string(back.style));
+    }
     back.obj.data.array                 = nullptr;
     hierarchy.pop_back();
     addToken(Parser::ParserArrayObject, std::move(array));
 }
-void YamlParser::push_map(yaml_event_t const&)
+void YamlParser::push_map(yaml_event_t const& event)
 {
     pi.mapOpen();
-    hierarchy.emplace_back(static_cast<Parser::ParserMap*>(nullptr));
+    hierarchy.emplace_back(static_cast<Parser::ParserMap*>(nullptr), event);
 }
 void YamlParser::pop_map(yaml_event_t const&)
 {
@@ -327,6 +334,13 @@ void YamlParser::pop_map(yaml_event_t const&)
     pi.mapClose();
 
     std::unique_ptr<ParserValue>  map{pi.valueParseMap(back.obj.data.map)};
+    if (map.get())
+    {
+        map->setAttribute("anchor",      back.anchor);
+        map->setAttribute("tag",         back.tag);
+        map->setAttribute("implicit",    std::to_string(back.implicit));
+        map->setAttribute("style",       std::to_string(back.style));
+    }
     back.obj.data.map               = nullptr;
     hierarchy.pop_back();
     addToken(Parser::ParserMapObject, std::move(map));
