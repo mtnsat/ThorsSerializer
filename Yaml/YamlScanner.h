@@ -20,7 +20,7 @@ struct YamlKeyGen: public Parser::KeyGenVisitor
 
     virtual void visit(Parser::ParserStringItem const& item)
     {
-        std::for_each(std::begin(*item.value), std::end(*item.value), [this](char next)
+        std::for_each(std::begin(item.value), std::end(item.value), [this](char next)
         {
             switch(next)
             {
@@ -30,9 +30,9 @@ struct YamlKeyGen: public Parser::KeyGenVisitor
            }
         });
     }
-    virtual void visit(Parser::ParserNumberItem const& item)    { key += *item.value;}
-    virtual void visit(Parser::ParserBoolItem const& item)      { key += item.value ? "true" : "false";}
-    virtual void visit(Parser::ParserNULLItem const&)           { key += "null";}
+    virtual void visit(Parser::ParserNumberItem const& item)    { key += item.value;}
+    virtual void visit(Parser::ParserBoolItem const& item)      { key += item.value;}
+    virtual void visit(Parser::ParserNULLItem const& item)      { key += item.value;}
     virtual void visit(Parser::ParserMapItem const& item)       { item.value->accept(*this);}
     virtual void visit(Parser::ParserArrayItem const& item)     { item.value->accept(*this);}
     virtual void visit(Parser::ParserArray const& node)

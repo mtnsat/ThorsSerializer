@@ -208,7 +208,7 @@ TEST(Yaml_Ch7, FlowMappingEntries)
                                 "?\n"
                                 "}\n"
                            };
-    std::string       output{ "{\"explicit\": \"entry\", \"implicit\": \"entry\", null: null}"  };
+    std::string       output{ "{null: null, \"explicit\": \"entry\", \"implicit\": \"entry\"}"  };
 
     runTest(ThorsAnvil::Parser::ParserMapObject, input, output);
 }

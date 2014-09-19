@@ -135,8 +135,8 @@ class ScannerSaxInterface: public ParserCleanInterface
     virtual ParserValue*    valueParseString(std::string* str)                  { std::unique_ptr<std::string> astr(str); return new ParserStringItem(astr);}
     virtual ParserValue*    valueParseNumber(int b, int o, std::string* num)    { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(b, o, anum);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
-    virtual ParserValue*    valueParseBool(bool val)                            {                                         return new ParserBoolItem(val);}
-    virtual ParserValue*    valueParseNULL()                                    {                                         return new ParserNULLItem();}
+    virtual ParserValue*    valueParseBool(std::string* val, bool value)        { std::unique_ptr<std::string> aval(val); return new ParserBoolItem(aval, value);}
+    virtual ParserValue*    valueParseNULL(std::string* val)                    { std::unique_ptr<std::string> aval(val); return new ParserNULLItem(aval);}
 };
 
 template<typename KeyGenerator>

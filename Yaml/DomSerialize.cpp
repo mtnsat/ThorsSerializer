@@ -40,19 +40,19 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
 
     virtual void visit(Parser::ParserStringItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeString(*item.value, anchor, tag, pi, qi, s);}, item);
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeString(item.value, anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserNumberItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNumber(*item.value, anchor, tag, pi, qi, s);}, item);
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNumber(item.value, anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserBoolItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeBool(item.value?"true":"false", anchor, tag, pi, qi, s);}, item);
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeBool(item.value, anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserNULLItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNull("null", anchor, tag, pi, qi, s);}, item);
+        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNull(item.value, anchor, tag, pi, qi, s);}, item);
     }
     virtual void visit(Parser::ParserMapItem const& item)
     {

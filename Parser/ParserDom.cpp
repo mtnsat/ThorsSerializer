@@ -9,29 +9,29 @@ ParserValue::~ParserValue()
 {}
 
 ParserNumberItem::ParserNumberItem(std::unique_ptr<std::string>& data)
-    : base(0)
+    : ParserValue(std::move(*data))
+    , base(0)
     , offset(0)
-    , value(std::move(data))
 {}
 
 ParserNumberItem::ParserNumberItem(int base, int offset, std::unique_ptr<std::string>& data)
-    : base(base)
+    : ParserValue(std::move(*data))
+    , base(base)
     , offset(offset)
-    , value(std::move(data))
 {}
 
 void ParserNumberItem::setValue(long& dst)  const
 {
     dst = base == 0
-            ? std::atol(value->c_str())
-            : std::strtol(value->c_str() + offset, nullptr, base);
+            ? std::atol(value.c_str())
+            : std::strtol(value.c_str() + offset, nullptr, base);
 }
 
 void ParserNumberItem::setValue(double& dst)  const
 {
     dst = base == 0
-        ? std::atof(value->c_str())
-        : static_cast<double>(std::strtol(value->c_str() + offset, nullptr, base));
+        ? std::atof(value.c_str())
+        : static_cast<double>(std::strtol(value.c_str() + offset, nullptr, base));
 }
 
 void ParserNumberItem::accept(ParserValueConstVisitor& visitor) const

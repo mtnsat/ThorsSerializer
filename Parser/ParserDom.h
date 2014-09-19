@@ -126,9 +126,13 @@ struct ParserValue
     private:
     typedef std::map<std::string, std::string>              Attributes;
     public:
+    std::string                                             value;  /* The parsed value */
     typedef Attributes::iterator            AttrIterator;
     typedef Attributes::const_iterator      AttrConstIterator;
 
+    ParserValue(std::string const& value) : value(value) {}
+    ParserValue(std::string&& value) : value(std::forward<std::string>(value)) {}
+    ParserValue() {}
     virtual ~ParserValue();
 
     template<typename T>
@@ -162,19 +166,17 @@ struct ParserValue
 
 struct ParserStringItem: ParserValue
 {
-    std::unique_ptr<std::string>    value;
-    ParserStringItem(std::unique_ptr<std::string>& data): value(std::move(data)) {}
+    ParserStringItem(std::unique_ptr<std::string>& data): ParserValue(std::move(*data)) {}
 
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:
-        virtual void setValue(std::string&       dst)           const   {dst = *value;}
+        virtual void setValue(std::string&       dst)           const   {dst = value;}
 };
 struct ParserNumberItem: ParserValue
 {
     int                             base;
     int                             offset;
-    std::unique_ptr<std::string>    value;
     ParserNumberItem(std::unique_ptr<std::string>& data);
     ParserNumberItem(int base, int offset, std::unique_ptr<std::string>& data);
 
@@ -186,16 +188,17 @@ struct ParserNumberItem: ParserValue
 };
 struct ParserBoolItem: ParserValue
 {
-    bool                            value;
-    ParserBoolItem(bool data): value(data)                              {}
+    bool                            boolValue;
+    ParserBoolItem(std::unique_ptr<std::string>& data, bool boolData): ParserValue(std::move(*data)), boolValue(boolData)  {}
 
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
     private:
-        virtual void setValue(bool&         dst)                const   {dst = value;}
+        virtual void setValue(bool&         dst)                const   {dst = boolValue;}
 };
 struct ParserNULLItem: ParserValue
 {
+    ParserNULLItem(std::unique_ptr<std::string>& data): ParserValue(std::move(*data)) {}
     virtual void accept(ParserValueConstVisitor& visitor)       const;
     virtual void accept(ParserValueVisitor& visitor);
 

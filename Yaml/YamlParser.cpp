@@ -137,16 +137,22 @@ std::unique_ptr<ParserValue> YamlParser::getScalar(yaml_event_t const& event)
         //std::cout << "TAG: " << event.data.scalar.tag << "\n";
         std::string type    = reinterpret_cast<char const*>(event.data.scalar.tag);
         if (type == "tag:yaml.org,2002:str")    {return std::unique_ptr<ParserValue>(pi.valueParseString(new std::string(eventValue)));}
-        if (type == "tag:yaml.org,2002:null")   {return std::unique_ptr<ParserValue>(pi.valueParseNULL());}
-        if (type == "tag:yaml.org,2002:bool")   {return std::unique_ptr<ParserValue>(pi.valueParseBool(eventValue == "true"));}
+        if (type == "tag:yaml.org,2002:null")   {return std::unique_ptr<ParserValue>(pi.valueParseNULL(new std::string(eventValue)));}
+        if (type == "tag:yaml.org,2002:bool")   {return std::unique_ptr<ParserValue>(pi.valueParseBool(new std::string(eventValue), eventValue == "true"));}
         if (type == "tag:yaml.org,2002:int")    {return std::unique_ptr<ParserValue>(pi.valueParseNumber(new std::string(eventValue)));}
         if (type == "tag:yaml.org,2002:float")  {return std::unique_ptr<ParserValue>(pi.valueParseNumber(new std::string(eventValue)));}
     }
 
     // std::cout << "Scalar: ->" << eventValue << "<-\n";
-    if (eventValue == "null" || eventValue == "Null" || eventValue == "NULL" || eventValue == "~" || eventValue == "")      {return std::unique_ptr<ParserValue>(pi.valueParseNULL());}
-    if (eventValue == "true" || eventValue == "True" || eventValue == "TRUE")       {return std::unique_ptr<ParserValue>(pi.valueParseBool(true));}
-    if (eventValue == "false" || eventValue == "False" || eventValue == "FALSE")    {return std::unique_ptr<ParserValue>(pi.valueParseBool(false));}
+    if (eventValue == "null" || eventValue == "Null" || eventValue == "NULL" || eventValue == "~" || eventValue == "")
+    {   return std::unique_ptr<ParserValue>(pi.valueParseNULL(new std::string(eventValue)));
+    }
+    if (eventValue == "true" || eventValue == "True" || eventValue == "TRUE")
+    {   return std::unique_ptr<ParserValue>(pi.valueParseBool(new std::string(eventValue), true));
+    }
+    if (eventValue == "false" || eventValue == "False" || eventValue == "FALSE")
+    {   return std::unique_ptr<ParserValue>(pi.valueParseBool(new std::string(eventValue), false));
+    }
 
     auto end = eventValue.end();
     auto ptr = eventValue.begin();

@@ -18,7 +18,7 @@ struct JsonSerializeVisitor: public Parser::ParserValueConstVisitor
     virtual void visit(Parser::ParserStringItem const& item)
     {
         stream << '"';
-        std::for_each(std::begin(*item.value), std::end(*item.value), [this](char next)
+        std::for_each(std::begin(item.value), std::end(item.value), [this](char next)
         {
             switch(next)
             {
@@ -29,8 +29,8 @@ struct JsonSerializeVisitor: public Parser::ParserValueConstVisitor
         });
         stream << '"';
     }
-    virtual void visit(Parser::ParserNumberItem const& item)        {   stream << *item.value; }
-    virtual void visit(Parser::ParserBoolItem const& item)          {   stream << std::boolalpha << item.value; }
+    virtual void visit(Parser::ParserNumberItem const& item)        {   stream << item.value; }
+    virtual void visit(Parser::ParserBoolItem const& item)          {   stream << std::boolalpha << item.boolValue; }
     virtual void visit(Parser::ParserNULLItem const&)               {   stream << "null"; }
     virtual void visit(Parser::ParserMapItem const& item)           {   item.value->accept(*this);}
     virtual void visit(Parser::ParserArrayItem const& item)         {   item.value->accept(*this);}

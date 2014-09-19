@@ -19,8 +19,6 @@ extern void CheckResults(YamlParser& parser, ParserDomInterface& domBuilder, Par
 extern void runTest(ParserObjectType type, std::istream& input, std::string const& expectedResult);
 
 
-
-
 TEST(Yaml_Ch10, mapExamples)
 {
     std::stringstream input{    "Block style: !!map\n"
@@ -95,6 +93,7 @@ TEST(Yaml_Ch10, floatExamples)
 
     runTest(ThorsAnvil::Parser::ParserMapObject, input, output);
 }
+
 
 TEST(Yaml_Ch10, JSONTagResolution)
 {

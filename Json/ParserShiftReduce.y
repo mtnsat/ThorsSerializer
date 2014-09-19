@@ -42,8 +42,7 @@ int yylex(void*, LexerJson& lexer, ParserInterface& pi);
     ParserArray*                        jsonArray;
     ParserMapValue*                     jsonMapValue;
     ParserValue*                        jsonValue;
-    std::string*                        jsonString;
-    std::string*                        jsonNumber;
+    std::string*                        jsonToken;
 } 
 
 %token  JSON_STRING
@@ -53,8 +52,11 @@ int yylex(void*, LexerJson& lexer, ParserInterface& pi);
 %token  JSON_NULL
 
 %type   <jsonValue>     JsonValue
-%type   <jsonString>    JsonString
-%type   <jsonNumber>    JsonNumber
+%type   <jsonToken>     JsonString
+%type   <jsonToken>     JsonNumber
+%type   <jsonToken>     JsonTrue
+%type   <jsonToken>     JsonFalse
+%type   <jsonToken>     JsonNull
 
 %type   <jsonMap>       JsonMap
 %type   <jsonMap>       JsonMapValueListOpt
@@ -102,15 +104,15 @@ JsonValue               :   JsonMap                                 {$$ = pi.val
                         |   JsonArray                               {$$ = pi.valueParseArray($1);}
                         |   JsonString                              {$$ = pi.valueParseString($1);}
                         |   JsonNumber                              {$$ = pi.valueParseNumber($1);}
-                        |   JsonTrue                                {$$ = pi.valueParseBool(true);}
-                        |   JsonFalse                               {$$ = pi.valueParseBool(false);}
-                        |   JsonNull                                {$$ = pi.valueParseNULL();}
+                        |   JsonTrue                                {$$ = pi.valueParseBool($1, true);}
+                        |   JsonFalse                               {$$ = pi.valueParseBool($1, false);}
+                        |   JsonNull                                {$$ = pi.valueParseNULL($1);}
 
 JsonString              :   JSON_STRING                             {$$ = new std::string(lexer.getToken());}
 JsonNumber              :   JSON_NUMBER                             {$$ = new std::string(lexer.getToken());}
-JsonTrue                :   JSON_TRUE
-JsonFalse               :   JSON_FALSE
-JsonNull                :   JSON_NULL
+JsonTrue                :   JSON_TRUE                               {$$ = new std::string(lexer.getToken());}
+JsonFalse               :   JSON_FALSE                              {$$ = new std::string(lexer.getToken());}
+JsonNull                :   JSON_NULL                               {$$ = new std::string(lexer.getToken());}
 
 
 %%

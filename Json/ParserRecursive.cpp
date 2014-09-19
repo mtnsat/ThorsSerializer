@@ -32,9 +32,9 @@ int ParserRecursive::JsonValueParse(int val, std::unique_ptr<Parser::ParserValue
                                                         }
         case yy::ParserShiftReduce::token::JSON_STRING: value.reset(pi.valueParseString(new std::string(lexer.getToken())));return 0;
         case yy::ParserShiftReduce::token::JSON_NUMBER: value.reset(pi.valueParseNumber(new std::string(lexer.getToken())));return 0;
-        case yy::ParserShiftReduce::token::JSON_TRUE:   value.reset(pi.valueParseBool(true));    return 0;
-        case yy::ParserShiftReduce::token::JSON_FALSE:  value.reset(pi.valueParseBool(false));   return 0;
-        case yy::ParserShiftReduce::token::JSON_NULL:   value.reset(pi.valueParseNULL());        return 0;
+        case yy::ParserShiftReduce::token::JSON_TRUE:   value.reset(pi.valueParseBool(new std::string(lexer.getToken()), true));return 0;
+        case yy::ParserShiftReduce::token::JSON_FALSE:  value.reset(pi.valueParseBool(new std::string(lexer.getToken()), false));return 0;
+        case yy::ParserShiftReduce::token::JSON_NULL:   value.reset(pi.valueParseNULL(new std::string(lexer.getToken())));return 0;
         default:break;
     }
     return error(val, "syntax error");

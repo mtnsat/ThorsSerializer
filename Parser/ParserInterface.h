@@ -84,8 +84,8 @@ struct ParserInterface
     virtual ParserValue*    valueParseString(std::string* str)                  = 0;
     virtual ParserValue*    valueParseNumber(int base, int off, std::string* n) = 0;
     virtual ParserValue*    valueParseNumber(std::string* num)                  = 0;
-    virtual ParserValue*    valueParseBool(bool value)                          = 0;
-    virtual ParserValue*    valueParseNULL()                                    = 0;
+    virtual ParserValue*    valueParseBool(std::string*, bool value)            = 0;
+    virtual ParserValue*    valueParseNULL(std::string*)                        = 0;
 };
 
 struct ParserCleanInterface: ParserInterface
@@ -113,8 +113,8 @@ struct ParserCleanInterface: ParserInterface
     virtual ParserValue*    valueParseString(std::string* str)                  { delete str; return NULL;}
     virtual ParserValue*    valueParseNumber(int, int, std::string* num)        { delete num; return NULL;}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { delete num; return NULL;}
-    virtual ParserValue*    valueParseBool(bool)                                { return NULL;}
-    virtual ParserValue*    valueParseNULL()                                    { return NULL;}
+    virtual ParserValue*    valueParseBool(std::string* val, bool)              { delete val; return NULL;}
+    virtual ParserValue*    valueParseNULL(std::string* val)                    { delete val; return NULL;}
 };
 
 template<typename T = ParserCleanInterface>
@@ -163,8 +163,8 @@ struct ParserLogInterface: ParserInterface
     virtual ParserValue*    valueParseString(std::string* val)                  {std::cout << "ParserValue: ParserString\n";                                  return actualInterface.valueParseString(val);}
     virtual ParserValue*    valueParseNumber(int base, int off, std::string* n) {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(base, off, n);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  {std::cout << "ParserValue: ParserNumber\n";                                  return actualInterface.valueParseNumber(num);}
-    virtual ParserValue*    valueParseBool(bool val)                            {std::cout << "ParserValue: ParserTrue\n";                                    return actualInterface.valueParseBool(val);}
-    virtual ParserValue*    valueParseNULL()                                    {std::cout << "ParserValue: ParserFalse\n";                                   return actualInterface.valueParseNULL();}
+    virtual ParserValue*    valueParseBool(std::string* val, bool value)        {std::cout << "ParserValue: ParserTrue\n";                                    return actualInterface.valueParseBool(val, value);}
+    virtual ParserValue*    valueParseNULL(std::string* val)                    {std::cout << "ParserValue: ParserFalse\n";                                   return actualInterface.valueParseNULL(val);}
 };
 
 struct ParserDomInterface: ParserCleanInterface
@@ -198,8 +198,8 @@ struct ParserDomInterface: ParserCleanInterface
     virtual ParserValue*    valueParseString(std::string* str)                  { std::unique_ptr<std::string> astr(str); return new ParserStringItem(astr);}
     virtual ParserValue*    valueParseNumber(int b, int o, std::string* num)    { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(b, o, anum);}
     virtual ParserValue*    valueParseNumber(std::string* num)                  { std::unique_ptr<std::string> anum(num); return new ParserNumberItem(anum);}
-    virtual ParserValue*    valueParseBool(bool value)                          { return new ParserBoolItem(value);}
-    virtual ParserValue*    valueParseNULL()                                    { return new ParserNULLItem();}
+    virtual ParserValue*    valueParseBool(std::string* val, bool value)        { std::unique_ptr<std::string> aval(val); return new ParserBoolItem(aval, value);}
+    virtual ParserValue*    valueParseNULL(std::string* val)                    { std::unique_ptr<std::string> aval(val); return new ParserNULLItem(aval);}
 
     ParserObjectType                type;
     std::unique_ptr<ParserValue>    result;

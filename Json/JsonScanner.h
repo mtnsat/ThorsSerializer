@@ -16,7 +16,7 @@ struct JsonKeyGen: public Parser::KeyGenVisitor
 {
     std::string     key;
     virtual std::string     getKey()                            { return key;}
-    virtual void            visit(Parser::ParserStringItem const& item) { key = *item.value;}
+    virtual void            visit(Parser::ParserStringItem const& item) { key = item.value;}
 
     virtual void visit(Parser::ParserNumberItem const&)        {throw std::runtime_error("JsonKeyGen: Invalid Key: ParserNumberItem");}
     virtual void visit(Parser::ParserBoolItem const&)          {throw std::runtime_error("JsonKeyGen: Invalid Key: ParserBoolItem");}
