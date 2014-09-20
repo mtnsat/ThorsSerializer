@@ -64,6 +64,12 @@ struct ParserInterface
         key.accept(keyGenVisitor);
         return keyGenVisitor.getKey();
     }
+    virtual void            setAttribute(ParserValue* item, std::string const& key, std::string const& value)
+    {
+        if (item)
+        {   item->setAttribute(key, value);
+        }
+    }
     virtual void            done(ParserObjectType type, ParserValue* result)    = 0;
     virtual void            mapOpen()                                           = 0;
     virtual void            mapClose()                                          = 0;

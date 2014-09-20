@@ -124,15 +124,12 @@ void YamlParser::stop_doc(yaml_event_t const& event)
     implicitTail    = event.data.document_end.implicit;
     done            = true;
 
-    if (resultValue.get())
+    pi.setAttribute(resultValue.get(), "version",      std::to_string(version.first) + "." + std::to_string(version.second));
+    pi.setAttribute(resultValue.get(), "implicitHead", std::to_string(implicitHead));
+    pi.setAttribute(resultValue.get(), "implicitTail", std::to_string(implicitTail));
+    for(auto loop = std::begin(directives); loop != std::end(directives); ++loop)
     {
-        resultValue->setAttribute("version",  std::to_string(version.first) + "." + std::to_string(version.second));
-        resultValue->setAttribute("implicitHead", std::to_string(implicitHead));
-        resultValue->setAttribute("implicitTail", std::to_string(implicitTail));
-        for(auto loop = std::begin(directives); loop != std::end(directives); ++loop)
-        {
-            resultValue->setAttribute(std::string("dir:") + loop->first, loop->second);
-        }
+        pi.setAttribute(resultValue.get(), std::string("dir:") + loop->first, loop->second);
     }
     pi.done(resultType, resultValue.release());
 }
@@ -309,18 +306,15 @@ void YamlParser::push_scalarValue(yaml_event_t const& event)
 {
     // std::cout << "push_scalarValue()\n";
     std::unique_ptr<ParserValue>    scalar(getScalar(event));
-    if (scalar.get())
-    {
-        if (event.data.scalar.anchor)
-        {   scalar->setAttribute("anchor",          reinterpret_cast<char*>(event.data.scalar.anchor));
-        }
-        if (event.data.scalar.tag)
-        {   scalar->setAttribute("tag",             reinterpret_cast<char*>(event.data.scalar.tag));
-        }
-        scalar->setAttribute("plain_implicit",  std::to_string(event.data.scalar.plain_implicit));
-        scalar->setAttribute("quoted_implicit", std::to_string(event.data.scalar.quoted_implicit));
-        scalar->setAttribute("style",           std::to_string(event.data.scalar.style));
+    if (event.data.scalar.anchor)
+    {   pi.setAttribute(scalar.get(), "anchor",      reinterpret_cast<char*>(event.data.scalar.anchor));
     }
+    if (event.data.scalar.tag)
+    {   pi.setAttribute(scalar.get(), "tag",         reinterpret_cast<char*>(event.data.scalar.tag));
+    }
+    pi.setAttribute(scalar.get(), "plain_implicit",  std::to_string(event.data.scalar.plain_implicit));
+    pi.setAttribute(scalar.get(), "quoted_implicit", std::to_string(event.data.scalar.quoted_implicit));
+    pi.setAttribute(scalar.get(), "style",           std::to_string(event.data.scalar.style));
 
     addToken(Parser::ParserValueObject, std::move(scalar));
 }
@@ -341,13 +335,11 @@ void YamlParser::pop_array(yaml_event_t const&)
     pi.arrayClose();
 
     std::unique_ptr<ParserValue>  array{pi.valueParseArray(back.obj.data.array)};
-    if (array.get())
-    {
-        array->setAttribute("anchor",      back.anchor);
-        array->setAttribute("tag",         back.tag);
-        array->setAttribute("implicit",    std::to_string(back.implicit));
-        array->setAttribute("style",       std::to_string(back.style));
-    }
+    pi.setAttribute(array.get(), "anchor",      back.anchor);
+    pi.setAttribute(array.get(), "tag",         back.tag);
+    pi.setAttribute(array.get(), "implicit",    std::to_string(back.implicit));
+    pi.setAttribute(array.get(), "style",       std::to_string(back.style));
+
     back.obj.data.array                 = nullptr;
     hierarchy.pop_back();
     addToken(Parser::ParserArrayObject, std::move(array));
@@ -368,13 +360,11 @@ void YamlParser::pop_map(yaml_event_t const&)
     pi.mapClose();
 
     std::unique_ptr<ParserValue>  map{pi.valueParseMap(back.obj.data.map)};
-    if (map.get())
-    {
-        map->setAttribute("anchor",      back.anchor);
-        map->setAttribute("tag",         back.tag);
-        map->setAttribute("implicit",    std::to_string(back.implicit));
-        map->setAttribute("style",       std::to_string(back.style));
-    }
+    pi.setAttribute(map.get(), "anchor",      back.anchor);
+    pi.setAttribute(map.get(), "tag",         back.tag);
+    pi.setAttribute(map.get(), "implicit",    std::to_string(back.implicit));
+    pi.setAttribute(map.get(), "style",       std::to_string(back.style));
+
     back.obj.data.map               = nullptr;
     hierarchy.pop_back();
     addToken(Parser::ParserMapObject, std::move(map));
