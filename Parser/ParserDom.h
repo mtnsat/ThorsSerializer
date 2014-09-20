@@ -147,6 +147,8 @@ struct ParserValue
 
     void                setAttribute(std::string const& name, std::string const& v)             {attributes[name] = v;}
     void                delAttribute(std::string const& name)                                   {attributes.erase(attributes.find(name));}
+    AttrConstIterator   attrBegin() const                                                       {return attributes.begin();}
+    AttrConstIterator   attrEnd() const                                                         {return attributes.end();}
     std::string         getAttribute(std::string const& name, std::string const& d = "") const
     {
         auto find = attributes.find(name);

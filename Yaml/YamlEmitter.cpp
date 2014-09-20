@@ -1,5 +1,6 @@
 
 #include "YamlEmitter.h"
+#include "YamlUtil.h"
 #include <iostream>
 
 using namespace ThorsAnvil::Yaml;
@@ -22,23 +23,12 @@ YamlEmitter::YamlEmitter(std::ostream& stream)
         yaml_emitter_delete(&emitter);
         throw std::runtime_error("YamlEmitter::YamlEmitter: Failed stream_start_event_initialize");
     }
-    if (!yaml_document_start_event_initialize(&event, nullptr, nullptr, nullptr, 1) || !yaml_emitter_emit(&emitter, &event))
-    {
-        yaml_emitter_delete(&emitter);
-        throw std::runtime_error("YamlEmitter::YamlEmitter: Failed document_start_event_initialize");
-    }
 }
 YamlEmitter::~YamlEmitter()
 {
     yaml_event_t    event;
-    if (!yaml_document_end_event_initialize(&event, 1) || !yaml_emitter_emit(&emitter, &event))
+    if (!yaml_stream_end_event_initialize(&event) || !yaml_emitter_emit(&emitter, &event))
     {   /* Error Do nothing in Destructor */
-    }
-    else
-    {
-        if (!yaml_stream_end_event_initialize(&event) || !yaml_emitter_emit(&emitter, &event))
-        {   /* Error Do nothing in Destructor */
-        }
     }
     yaml_emitter_delete(&emitter);
 }
@@ -69,13 +59,6 @@ int YamlEmitter::writeHandler(unsigned char* buffer, std::size_t size)
    YAML_FOLDED_SCALAR_STYLE
 #endif
 
-yaml_char_t* convertStringToYamlCharPtr(std::string const& value)
-{
-    if (value == "")
-    {   return nullptr;
-    }
-    return reinterpret_cast<yaml_char_t*>(const_cast<char*>(value.c_str()));
-}
 void YamlEmitter::writeString(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
 {
     yaml_event_t    event;
@@ -175,4 +158,50 @@ void YamlEmitter::writeArrayEnd()
     }
 }
 
+void YamlEmitter::writeDocStart(std::string const& version, std::vector<yaml_tag_directive_t> const& directives, std::string const& implicit)
+    /*
+    yaml_version_directive_t *      version_directive,
+    yaml_tag_directive_t *      tag_directives_start,
+    yaml_tag_directive_t *      tag_directives_end,
+    int     implicit
+    */
+{
+    bool                        hasDirective = false;
+    yaml_version_directive_t    vDirective;
+    if (version != "-1.0")
+    {
+        hasDirective    = true;
+        vDirective.major = 1;
+        vDirective.minor = 2;
+    }
+
+    yaml_tag_directive_t const*   start   = nullptr;
+    yaml_tag_directive_t const*   end     = nullptr;
+    if (directives.size() != 0)
+    {
+        start   = &directives[0];
+        end     = &directives[0] + directives.size() + 1;
+    }
+
+    int implicitVal     = std:: stoi(implicit);
+
+    yaml_event_t    event;
+    if (!yaml_document_start_event_initialize(&event,
+                                                hasDirective?&vDirective:nullptr,
+                                                const_cast<yaml_tag_directive_t*>(start),
+                                                const_cast<yaml_tag_directive_t*>(end),
+                                                implicitVal) || !yaml_emitter_emit(&emitter, &event))
+    {
+        throw std::runtime_error("YamlEmitter::writeDocStart: Failed document_start_event_initialize");
+    }
+}
+void YamlEmitter::writeDocEnd(std::string const& implicit)
+{
+    int implicitVal     = std:: stoi(implicit);
+    yaml_event_t    event;
+    if (!yaml_document_end_event_initialize(&event, implicitVal) || !yaml_emitter_emit(&emitter, &event))
+    {
+        throw std::runtime_error("YamlEmitter::writeDocEnd: Failed yaml_document_end_event_initialize");
+    }
+}
 

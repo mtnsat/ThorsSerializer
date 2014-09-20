@@ -1,5 +1,6 @@
 
 #include "YamlParser.h"
+#include "YamlUtil.h"
 #include "Parser/ParserException.h"
 #include <boost/lexical_cast.hpp>
 
@@ -101,12 +102,39 @@ void YamlParser::start_stream(yaml_event_t const&)
 void YamlParser::stop_stream(yaml_event_t const&)
 {
 }
-void YamlParser::start_doc(yaml_event_t const&)
+void YamlParser::start_doc(yaml_event_t const& event)
 {
+    implicitHead    = event.data.document_start.implicit;
+    version.first   = -1;
+    version.second  = 0;
+    if (event.data.document_start.version_directive)
+    {
+        version.first   = event.data.document_start.version_directive->major;
+        version.second  = event.data.document_start.version_directive->minor;
+    }
+
+    for(auto loop = event.data.document_start.tag_directives.start; loop != event.data.document_start.tag_directives.end; ++loop)
+    {
+        directives.emplace_back(convertYamlCharPtrToString(loop->handle),
+                                convertYamlCharPtrToString(loop->prefix));
+    }
 }
-void YamlParser::stop_doc(yaml_event_t const&)
+void YamlParser::stop_doc(yaml_event_t const& event)
 {
-    done    = true;
+    implicitTail    = event.data.document_end.implicit;
+    done            = true;
+
+    if (resultValue.get())
+    {
+        resultValue->setAttribute("version",  std::to_string(version.first) + "." + std::to_string(version.second));
+        resultValue->setAttribute("implicitHead", std::to_string(implicitHead));
+        resultValue->setAttribute("implicitTail", std::to_string(implicitTail));
+        for(auto loop = std::begin(directives); loop != std::end(directives); ++loop)
+        {
+            resultValue->setAttribute(std::string("dir:") + loop->first, loop->second);
+        }
+    }
+    pi.done(resultType, resultValue.release());
 }
 std::unique_ptr<ParserValue> YamlParser::getScalar(yaml_event_t const& event)
 {
@@ -357,33 +385,8 @@ void YamlParser::addToken(Parser::ParserObjectType type, std::unique_ptr<ParserV
     // std::cout << "addToken()\n";
     if (hierarchy.size() == 0)
     {
-        switch(type)
-        {
-            case Parser::ParserMapObject:
-            {
-                std::unique_ptr<ParserMapItem>  mapItem(dynamic_cast<ParserMapItem*>(token.release()));
-                if (mapItem.get())
-                {
-                    pi.done(Parser::ParserMapObject, mapItem.release());
-                }
-                break;
-            }
-            case Parser::ParserArrayObject:
-            {
-                std::unique_ptr<ParserArrayItem>  arrayItem(dynamic_cast<ParserArrayItem*>(token.release()));
-                if (arrayItem.get())
-                {
-                    pi.done(Parser::ParserArrayObject, arrayItem.release());
-                }
-                break;
-            }
-            case Parser::ParserValueObject:
-            {
-                pi.done(Parser::ParserValueObject, token.release());
-                break;
-            }
-            default:    throw std::runtime_error("Invalid Object type");
-        }
+        resultType  = type;
+        resultValue = std::move(token);
         return;
     }
     // std::cout << "Size: " << hierarchy.size() << "\n";

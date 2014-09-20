@@ -1,6 +1,7 @@
 
 #include "DomSerialize.h"
 #include "YamlEmitter.h"
+#include "YamlUtil.h"
 #include "Parser/ParserDomVisit.h"
 
 
@@ -12,13 +13,44 @@ namespace ThorsAnvil
 struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
 {
     YamlEmitter     emitter;
+    bool            docStart;
 
     YamlSerializeVisitor(std::ostream& stream)
         : emitter(stream)
+        , docStart(false)
     {}
+
+    void writeDocStart(Parser::ParserValue const& item)
+    {
+        docStart    = true;
+        std::vector<yaml_tag_directive_t>      directives;
+
+        for(auto loop = item.attrBegin(); loop != item.attrEnd(); ++loop)
+        {
+            std::string const& handle   = loop->first;
+            std::string const& key      = loop->second;
+            if (handle.substr(0,4) == "dir:")
+            {
+                yaml_tag_directive_t   dir;
+                dir.handle = convertStringToYamlCharPtr(handle) + 4;
+                dir.prefix = convertStringToYamlCharPtr(key);
+                directives.push_back(dir);
+            }
+        }
+        emitter.writeDocStart(item.getAttribute("version", "-1.0"), directives, item.getAttribute("implicitHead", "1"));
+    }
+    void writeDocEnd(Parser::ParserValue const& item)
+    {
+        emitter.writeDocEnd(item.getAttribute("implicitTail", "1"));
+        docStart    = false;
+    }
 
     void doWrite(std::function<void(std::string const&, std::string const&, int, int, int)> action, Parser::ParserValue const& item)
     {
+        bool    start   = docStart;
+        if (!start)
+        {   writeDocStart(item);
+        }
         std::string const&  anchor          = item.getAttribute("anchor");
         std::string const&  tag             = item.getAttribute("tag");
         int                 plain_implicit  = std::stoi(item.getAttribute("plain_implicit"));
@@ -26,10 +58,17 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
         int                 style           = std::stoi(item.getAttribute("style"));
 
         action(anchor, tag, plain_implicit, quoted_implicit, style);
+        if (!start)
+        {   writeDocEnd(item);
+        }
     }
 
     void doWriteContainer(std::function<void(std::string const& anchor, std::string const& tag, int i, int s)> action, Parser::ParserValue const& item)
     {
+        bool    start   = docStart;
+        if (!start)
+        {   writeDocStart(item);
+        }
         std::string const&  anchor          = item.getAttribute("anchor");
         std::string const&  tag             = item.getAttribute("tag");
         int                 implicit        = std::stoi(item.getAttribute("implicit"));
@@ -56,15 +95,23 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
     }
     virtual void visit(Parser::ParserMapItem const& item)
     {
+        bool    start   = docStart;
         doWriteContainer([this](std::string const& anchor, std::string const& tag, int i, int s){this->emitter.writeMapStart(anchor, tag, i, s);}, item);
         item.value->accept(*this);
         emitter.writeMapEnd();
+        if (!start)
+        {   writeDocEnd(item);
+        }
     }
     virtual void visit(Parser::ParserArrayItem const& item)
     {
+        bool    start   = docStart;
         doWriteContainer([this](std::string const& anchor, std::string const& tag, int i, int s){this->emitter.writeArrayStart(anchor, tag, i, s);}, item);
         item.value->accept(*this);
         emitter.writeArrayEnd();
+        if (!start)
+        {   writeDocEnd(item);
+        }
     }
     virtual void visit(Parser::ParserArray const& node)
     {

@@ -102,7 +102,16 @@ class YamlParser: public Parser::LexerParser
         {}
     };
 
+    typedef std::pair<std::string, std::string>     YamlDirective;
+    typedef std::pair<int, int>                     Version;
+
+    std::unique_ptr<Parser::ParserValue>resultValue;
+    Parser::ParserObjectType            resultType;
     std::vector<YamlHierarchyObject>    hierarchy;
+    std::vector<YamlDirective>          directives;
+    Version                             version;
+    int                                 implicitHead;
+    int                                 implicitTail;
     std::istream&                       str;
     Parser::ParserInterface&            pi;
     yaml_parser_t                       parser;   

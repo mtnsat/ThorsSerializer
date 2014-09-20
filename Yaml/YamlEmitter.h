@@ -3,6 +3,7 @@
 #define THORSANVIL_YAML_YAML_EMITTER_H
 
 #include <ostream>
+#include <vector>
 #include <yaml.h>
 
 namespace ThorsAnvil
@@ -31,6 +32,8 @@ class YamlEmitter
         void writeMapEnd();
         void writeArrayStart(std::string const& anchor, std::string const& tag, int implicit, int style);
         void writeArrayEnd();
+        void writeDocStart(std::string const& version, std::vector<yaml_tag_directive_t> const& directives, std::string const& implicit);
+        void writeDocEnd(std::string const& implicit);
 };
 
     }
