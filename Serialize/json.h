@@ -1,46 +1,28 @@
 
-#ifndef  THORSANVIL_SERIALIZE_JSON_H
-#define  THORSANVIL_SERIALIZE_JSON_H
+#ifndef THORSANVIL_SERIALIZE_JSON_H
+#define THORSANVIL_SERIALIZE_JSON_H
 
-/*
- * A convenience header for json serialization
- *
- * For normal usage of the json serialization this is the only interface you need to look at:
- *
- *      std::cout << jsonExport(myObj) << std::endl; 
- *      std::cin  >> jsonImport(myObj);
- *
- * If you need to define the interface to serialize a class see the file JsonSerializer.h
- */
-
-#include "Serialize.h"
-#include "JsonSerializer.h"
-#include "JsonSerializerBasic.h"
-#include "JsonSerializerMemory.h"
-#include "JsonSerializerContainer.h"
-#include "JsonSerializerMap.h"
-#include "JsonSerializerSet.h"
-#include "JsonSerializerVector.h"
-#include "JsonSerializerDeQue.h"
-#include "JsonSerializerList.h"
+#include "serializer.h"
+#include "Json/JsonScanner.h"
 
 namespace ThorsAnvil
 {
     namespace Serialize
     {
 
-/* Helper functions */
 template<typename T>
-Importer<T, typename Json::JsonSerializer::template Parser<T> >   jsonImport(T& object)
+Importer<T, ThorsAnvil::Json::JsonScannerSax> jsonImport(T& obj)
 {
-    return importObj<Json::JsonSerializer, T>(object);
+    return Importer<T, ThorsAnvil::Json::JsonScannerSax>(obj);
+}
+template<typename T>
+Exporter<T, ThorsAnvil::Json::JsonScannerSax> jsonExport(T const& obj)
+{
+    return Exporter<T, ThorsAnvil::Json::JsonScannerSax>(obj);
 }
 
-template<typename T>
-Exporter<T, typename Json::JsonSerializer::template Printer<T> >  jsonExport(T const& object)
-{
-    return exportObj<Json::JsonSerializer, T>(object);
-}
+// To force an object file to be created (so tests will be run correctly).
+class F { public: F(); };
 
     }
 }

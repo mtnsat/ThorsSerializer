@@ -3,6 +3,8 @@
 #include "json.h"
 
 #include <map>
+#include <list>
+#include <deque>
 
 using ThorsAnvil::Serialize::jsonImport;
 using ThorsAnvil::Serialize::jsonExport;

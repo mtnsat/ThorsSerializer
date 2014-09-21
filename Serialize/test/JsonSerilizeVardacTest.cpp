@@ -17,7 +17,7 @@ class Config
 
     friend class ThorsAnvil::Serialize::Json::JsonSerializeTraits<Config>;
 };
-THOR_BUILD_SERIALIZE(void, Config, valInt, valDouble)
+JsonSerializeTraits_MAKE(void, Config, valInt, valDouble);
 
 /*
  * This test is designed to test the ability to serialize structs with a
@@ -27,7 +27,7 @@ struct SingleMemberConfig
 {
     Config      foo;
 };
-THOR_BUILD_SERIALIZE(void, SingleMemberConfig, foo)
+JsonSerializeTraits_MAKE(void, SingleMemberConfig, foo);
 
 template<typename T>
 std::string testAction(std::string const& expected)
@@ -35,10 +35,10 @@ std::string testAction(std::string const& expected)
     T                   object;
 
     std::stringstream   input(expected);
-    input  >> jsonImport(object);
+    //input  >> jsonImport(object);
 
     std::stringstream   output;
-    output << jsonExport(object);
+    //output << jsonExport(object);
 
     return output.str();
 }

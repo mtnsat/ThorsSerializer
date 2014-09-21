@@ -1,9 +1,9 @@
 
 
 THORSANVIL_ROOT			= $(realpath ../)
-LINK_LIBS				= Json
+LINK_LIBS				= Json Parser
 TARGET					= Serialize.slib
-UNITTEST_LINK_LIBS		= Json
+UNITTEST_LINK_LIBS		= Json Parser
 FILE_WARNING_FLAGS		+= -Wno-overloaded-virtual
 
 JsonSerilizeVardacTest_CXXFLAGS	+= -pedantic -Werror
