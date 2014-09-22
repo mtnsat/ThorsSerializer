@@ -145,6 +145,8 @@ TEST(JsonSerialize, ListOfMap)
 class EmptyJsonClass
 {};
 
+JsonSerializeTraits_MAKE(void, EmptyJsonClass);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<EmptyJsonClass>
@@ -153,7 +155,7 @@ struct JsonSerializeTraits<EmptyJsonClass>
     static JsonSerializeType const  type    = Map;
     typedef void                  SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, EmptyJsonClass)
 {
@@ -169,6 +171,8 @@ public:
     friend class ThorsAnvil::Serialize::Json::JsonSerializeTraits<OneMemberJsonClass>;
 };
 
+JsonSerializeTraits_MAKE(void, OneMemberJsonClass, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<OneMemberJsonClass>
@@ -179,7 +183,7 @@ struct JsonSerializeTraits<OneMemberJsonClass>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, OneMemberJsonClass)
 {
@@ -193,6 +197,8 @@ struct NestedJsonTest
     OneMemberJsonClass  nested;
 };
 
+JsonSerializeTraits_MAKE(void, NestedJsonTest, nested);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<NestedJsonTest>
@@ -203,7 +209,7 @@ struct JsonSerializeTraits<NestedJsonTest>
     THORSANVIL_SERIALIZE_JsonAttribute(nested);
     typedef boost::mpl::vector<nested>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, NestedJsonTest)
 {
@@ -219,6 +225,8 @@ struct TestFloat
     float value;
 };
 
+JsonSerializeTraits_MAKE(void, TestFloat, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestFloat>
@@ -229,7 +237,7 @@ struct JsonSerializeTraits<TestFloat>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestFloat)
 {
@@ -245,6 +253,8 @@ struct TestDouble
     double value;
 };
 
+JsonSerializeTraits_MAKE(void, TestDouble, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestDouble>
@@ -255,7 +265,7 @@ struct JsonSerializeTraits<TestDouble>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestDouble)
 {
@@ -272,6 +282,8 @@ struct TestShort
     short value;
 };
 
+JsonSerializeTraits_MAKE(void, TestShort, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestShort>
@@ -282,7 +294,7 @@ struct JsonSerializeTraits<TestShort>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestShort)
 {
@@ -298,6 +310,8 @@ struct TestInt
     int value;
 };
 
+JsonSerializeTraits_MAKE(void, TestInt, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestInt>
@@ -308,7 +322,7 @@ struct JsonSerializeTraits<TestInt>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestInt)
 {
@@ -324,6 +338,8 @@ struct TestLong
     long value;
 };
 
+JsonSerializeTraits_MAKE(void, TestLong, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestLong>
@@ -334,7 +350,7 @@ struct JsonSerializeTraits<TestLong>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestLong)
 {
@@ -378,6 +394,8 @@ struct TestUnsignedShort
     unsigned short value;
 };
 
+JsonSerializeTraits_MAKE(void, TestUnsignedShort, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestUnsignedShort>
@@ -388,7 +406,7 @@ struct JsonSerializeTraits<TestUnsignedShort>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestUnsignedShort)
 {
@@ -404,6 +422,8 @@ struct TestUnsignedInt
     unsigned int value;
 };
 
+JsonSerializeTraits_MAKE(void, TestUnsignedInt, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestUnsignedInt>
@@ -414,7 +434,7 @@ struct JsonSerializeTraits<TestUnsignedInt>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestUnsignedInt)
 {
@@ -430,6 +450,8 @@ struct TestUnsignedLong
     unsigned long value;
 };
 
+JsonSerializeTraits_MAKE(void, TestUnsignedLong, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestUnsignedLong>
@@ -440,7 +462,7 @@ struct JsonSerializeTraits<TestUnsignedLong>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestUnsignedLong)
 {
@@ -485,6 +507,8 @@ struct TestBool
     bool value;
 };
 
+JsonSerializeTraits_MAKE(void, TestBool, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestBool>
@@ -495,7 +519,7 @@ struct JsonSerializeTraits<TestBool>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestBoolTrue)
 {
@@ -518,6 +542,8 @@ struct TestString
     std::string value;
 };
 
+JsonSerializeTraits_MAKE(void, TestString, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestString>
@@ -528,7 +554,7 @@ struct JsonSerializeTraits<TestString>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestString)
 {
@@ -544,6 +570,8 @@ struct TestPointer
     TestString*     value;
 };
 
+JsonSerializeTraits_MAKE(void, TestPointer, value);
+/*
 namespace ThorsAnvil { namespace Serialize { namespace Json {
 template<>
 struct JsonSerializeTraits<TestPointer>
@@ -554,7 +582,7 @@ struct JsonSerializeTraits<TestPointer>
     THORSANVIL_SERIALIZE_JsonAttribute(value);
     typedef boost::mpl::vector<value>   SerializeInfo;
 };
-}}}
+}}}*/
 
 TEST(JsonSerialize, TestPointerNULL)
 {
