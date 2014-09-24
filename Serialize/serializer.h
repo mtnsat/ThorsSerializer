@@ -139,6 +139,8 @@ namespace ThorsAnvil
 
 template<typename ValueType, int TypeSpecialization>
 struct DoActionForMember;
+template<typename ValueType, int TypeSpecialization>
+struct DoPreActionForMember;
 
 template<typename T, typename M, int TypeSpecialization>
 class MemberAccess
@@ -161,8 +163,14 @@ class MemberAccess
             DoActionForMember<ValueType, TypeSpecialization>    action;
             action(scanner, key, value, (object.*dst));
         }
-        virtual void doPreAction(Parser::ScannerBaseSax&, Parser::Key const&)
-        {}
+        virtual void doPreAction(Parser::ScannerBaseSax& scanner, Parser::Key const& key)
+        {
+            T&      object   = this->member.object;
+            M&      dst      = this->member.dst;
+
+            DoPreActionForMember<ValueType, TypeSpecialization>    action;
+            action(scanner, key, (object.*dst));
+        }
         public:
             MemberAccessAction(MemberAccess& member)
                 : member(member)
@@ -196,15 +204,41 @@ template<typename ValueType>
 struct DoActionForMember<ValueType, ThorsAnvil::Serialize::Json::Map>
 {
     void operator()(Parser::ScannerBaseSax&, Parser::Key const&, Parser::ParserValue const&, ValueType&)
-    {
-        // scanner >> Importer<ValueType, S>(dest);
-    }
+    {}
 };
 /*
 template<typename ValueType>
 struct DoActionForMember<ValueType, ThorsAnvil::Serialize::Json::Array>
 {
     void operator()(Parser::ScannerBaseSax&, Parser::Key const&, Parser::ParserValue const&, ValueType&)
+    {
+    }
+};
+*/
+template<typename ValueType>
+struct DoPreActionForMember<ValueType, ThorsAnvil::Serialize::Json::Invalid>
+{
+    void operator()(Parser::ScannerBaseSax&, Parser::Key const&, ValueType&)
+    {}
+};
+template<typename ValueType>
+struct DoPreActionForMember<ValueType, ThorsAnvil::Serialize::Json::Map>
+{
+    void operator()(Parser::ScannerBaseSax&, Parser::Key const&, ValueType&)
+    {
+        /*
+        typedef ThorsAnvil::Serialize::Json::JsonSerializeTraits<ValueType>    Traits;
+
+        Traits          traits(serializer, object);
+        serializer.parse(stream);
+        */
+    }
+};
+/*
+template<typename ValueType>
+struct DoPreActionForMember<ValueType, ThorsAnvil::Serialize::Json::Array>
+{
+    void operator()(Parser::ScannerBaseSax&, Parser::Key const&, ValueType&)
     {
     }
 };
