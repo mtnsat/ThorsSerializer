@@ -59,7 +59,7 @@
 #define THOR_BUILD_Initialize_Val5(Sc, Obj,  local, member, ...) { Sc, Obj, #member, &local::member }, THOR_BUILD_Initialize_Val4(Sc, Obj,  local, __VA_ARGS__)
 #define THOR_BUILD_Initialize_Val4(Sc, Obj,  local, member, ...) { Sc, Obj, #member, &local::member }, THOR_BUILD_Initialize_Val3(Sc, Obj,  local, __VA_ARGS__)
 #define THOR_BUILD_Initialize_Val3(Sc, Obj,  local, member, ...) { Sc, Obj, #member, &local::member }, THOR_BUILD_Initialize_Val2(Sc, Obj,  local, __VA_ARGS__)
-#define THOR_BUILD_Initialize_Val2(Sc, Obj,  local, member)      { Sc, Obj, #member, &local::member }
+#define THOR_BUILD_Initialize_Val2(Sc, Obj,  local, member)      { Sc, Obj, #member, &local::member, false }
 #define THOR_BUILD_Initialize_Val1(Sc, Obj,  local)
 
 #define THOR_BUILD_GetLocal(...)                THOR_BUILD_GetLocal_C1(THOR_BUILD_SERIALIZE_COUNT_ARGS(__VA_ARGS__), __VA_ARGS__)
@@ -198,6 +198,21 @@ namespace ThorsAnvil
             };
 
             template<typename T>
+            class JsonSerializeTraits<T*, false>
+            {
+                public:
+                    enum { type = Invalid };
+                    static void scanner(Parser::ScannerBaseSax&,T&)
+                    {}
+                    static void printer(Parser::PrinterBaseSax& printer,T* const& object)
+                    {
+                        if (object != nullptr)
+                        {   throw std::runtime_error("!!!!");
+                        }
+                        printer << "null";
+                    }
+            };
+            template<typename T>
             class JsonSerializeTraits<T, true>
             {
                 public:
@@ -257,17 +272,15 @@ class PrefixPrinter<Json::Map>
     public:
         PrefixPrinter(Parser::PrinterBaseSax& printer, std::string const& name)
         {
-            printer << ",\"" << name << "\": ";
+            printer << "\"" << name << "\": ";
         }
 };
 template<>
 class PrefixPrinter<Json::Array>
 {
     public:
-        PrefixPrinter(Parser::PrinterBaseSax& printer, std::string const&)
-        {
-            printer << ",";
-        }
+        PrefixPrinter(Parser::PrinterBaseSax&, std::string const&)
+        {}
 };
 
 
@@ -308,7 +321,7 @@ class MemberScanner
 
     friend class MemberScannerAction;
     public:
-        MemberScanner(Parser::ScannerBaseSax& serializer, T& object, std::string const& name, M dst)
+        MemberScanner(Parser::ScannerBaseSax& serializer, T& object, std::string const& name, M dst, bool = true)
             : object(object)
             , dst(dst)
         {
@@ -324,7 +337,7 @@ template<typename T, typename M, int TypeSpecialization>
 class MemberPrinter
 {
     public:
-        MemberPrinter(Parser::PrinterBaseSax& printer, T const& object, std::string const& name, M src)
+        MemberPrinter(Parser::PrinterBaseSax& printer, T const& object, std::string const& name, M src, bool inSeq = true)
         {
             PrefixPrinter<TypeSpecialization>   prefixPrinter(printer, name);
 
@@ -332,6 +345,9 @@ class MemberPrinter
             using ObjType       = typename std::remove_reference<ObjRefType>::type;
             using Traits        = ThorsAnvil::Serialize::Json::JsonSerializeTraits<ObjType>;
             Traits::printer(printer, (object.*src));
+            if (inSeq)
+            {   printer << ",";
+            }
         }
 };
 
