@@ -114,6 +114,9 @@ namespace ThorsAnvil                                                            
                         THOR_BUILD_Initialize_Val(scanner, object, __VA_ARGS__)         \
                     };                                                                  \
                 }                                                                       \
+                static void printer(Parser::PrinterBaseSax& printer, LocalType const& object)   \
+                {                                                                       \
+                }                                                                       \
             };                                                                          \
         }                                                                               \
     }                                                                                   \
@@ -124,6 +127,18 @@ namespace ThorsAnvil                                                            
 
 namespace ThorsAnvil
 {
+    namespace Parser
+    {
+        class PrinterBaseSax
+        {
+        };
+    }
+    namespace Json
+    {
+        class JsonPrinterSax: public Parser::PrinterBaseSax
+        {
+        };
+    }
     namespace Serialize
     {
         namespace Json
@@ -135,7 +150,8 @@ namespace ThorsAnvil
             {
                 public:
                     enum { type = Invalid };
-                    static void scanner(Parser::ScannerBaseSax&,T&){}
+                    static void scanner(Parser::ScannerBaseSax&,T&)         {}
+                    static void printer(Parser::PrinterBaseSax&,T const&)   {}
             };
         }
 
@@ -269,10 +285,21 @@ class Importer
 template<typename T, typename Printer>
 class Exporter
 {
+    T const& object;
     public:
-        Exporter(T const&){}
+        Exporter(T const& object)
+            : object(object)
+        {}
 
-    friend std::ostream& operator<<(std::ostream& stream, Exporter<T, Printer> const&) {return stream;}
+    friend std::ostream& operator<<(std::ostream& stream, Exporter<T, Printer> const& data)
+    {
+        typedef ThorsAnvil::Serialize::Json::JsonSerializeTraits<T>    Traits;
+
+        Printer      printer;
+        Traits::printer(printer, data.object);
+
+        return stream;
+    }
 };
 
     }

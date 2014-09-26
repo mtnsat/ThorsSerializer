@@ -16,9 +16,9 @@ Importer<T, ThorsAnvil::Json::JsonScannerSax> jsonImport(T& obj)
     return Importer<T, ThorsAnvil::Json::JsonScannerSax>(obj);
 }
 template<typename T>
-Exporter<T, ThorsAnvil::Json::JsonScannerSax> jsonExport(T const& obj)
+Exporter<T, ThorsAnvil::Json::JsonPrinterSax> jsonExport(T const& obj)
 {
-    return Exporter<T, ThorsAnvil::Json::JsonScannerSax>(obj);
+    return Exporter<T, ThorsAnvil::Json::JsonPrinterSax>(obj);
 }
 
 // To force an object file to be created (so tests will be run correctly).
