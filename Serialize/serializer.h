@@ -118,6 +118,7 @@ namespace ThorsAnvil                                                            
                 }                                                                       \
                 static void printer(Parser::PrinterBaseSax& printer, LocalType const& object)   \
                 {                                                                       \
+                    ObjectPrinter<Type> objectPrinter(printer);                         \
                     Printers{                                                           \
                         THOR_BUILD_Initialize_Val(printer, object, __VA_ARGS__)         \
                     };                                                                  \
@@ -136,12 +137,34 @@ namespace ThorsAnvil
     {
         class PrinterBaseSax
         {
+            protected:
+                std::ostream&   stream;
+
+            public:
+                PrinterBaseSax(std::ostream& stream)
+                    : stream(stream)
+                {}
+                virtual void    docBeg()            {}
+                virtual void    docEnd()            {}
+                virtual void    arrayBeg()          = 0;
+                virtual void    arrayEnd()          = 0;
+                virtual void    mapBeg()            = 0;
+                virtual void    mapEnd()            = 0;
         };
     }
     namespace Json
     {
         class JsonPrinterSax: public Parser::PrinterBaseSax
         {
+            public:
+                JsonPrinterSax(std::ostream& stream)
+                    : PrinterBaseSax(stream)
+                {}
+
+                virtual void    arrayBeg()          {stream << '[';}
+                virtual void    arrayEnd()          {stream << ']';}
+                virtual void    mapBeg()            {stream << '{';}
+                virtual void    mapEnd()            {stream << '}';}
         };
     }
     namespace Serialize
@@ -164,6 +187,41 @@ template<typename ValueType, int TypeSpecialization>
 struct DoActionForMember;
 template<typename ValueType, int TypeSpecialization>
 struct DoPreActionForMember;
+
+template<int TypeSpecialization>
+class ObjectPrinter;
+
+template<>
+class ObjectPrinter<Json::Map>
+{
+    Parser::PrinterBaseSax& printer;
+    public:
+        ObjectPrinter(Parser::PrinterBaseSax& printer)
+            : printer(printer)
+        {
+            printer.mapBeg();
+        }
+        ~ObjectPrinter()
+        {
+            printer.mapEnd();
+        }
+};
+template<>
+class ObjectPrinter<Json::Array>
+{
+    Parser::PrinterBaseSax& printer;
+    public:
+        ObjectPrinter(Parser::PrinterBaseSax& printer)
+            : printer(printer)
+        {
+            printer.arrayBeg();
+        }
+        ~ObjectPrinter()
+        {
+            printer.arrayEnd();
+        }
+};
+
 
 template<typename T, typename M, int TypeSpecialization>
 class MemberScanner
@@ -307,8 +365,10 @@ class Exporter
     {
         typedef ThorsAnvil::Serialize::Json::JsonSerializeTraits<T>    Traits;
 
-        Printer      printer;
+        Printer      printer(stream);
+        printer.docBeg();
         Traits::printer(printer, data.object);
+        printer.docEnd();
 
         return stream;
     }
