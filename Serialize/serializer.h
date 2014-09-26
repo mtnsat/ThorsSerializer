@@ -4,6 +4,9 @@
 
 #include "Parser/ScannerSax.h"
 #include <boost/mpl/vector.hpp>
+#include <boost/type_traits/integral_constant.hpp>
+#include <boost/type_traits/is_fundamental.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <istream>
 #include <tuple>
 
@@ -144,6 +147,9 @@ namespace ThorsAnvil
                 PrinterBaseSax(std::ostream& stream)
                     : stream(stream)
                 {}
+                template<typename T>
+                PrinterBaseSax& operator<<(T const& val)    {stream << val;return *this;}
+
                 virtual void    docBeg()            {}
                 virtual void    docEnd()            {}
                 virtual void    arrayBeg()          = 0;
@@ -167,19 +173,41 @@ namespace ThorsAnvil
                 virtual void    mapEnd()            {stream << '}';}
         };
     }
+
+    namespace Utility
+    {
+        template<typename T>
+        struct FundamentalSerializable: boost::integral_constant<bool, boost::is_fundamental<T>::value && !boost::is_same<T, void>::value >
+        { };
+    }
     namespace Serialize
     {
         namespace Json
         {
             enum JsonSerializeType {Invalid, Array, Map};
 
-            template<typename T>
+            template<typename T, bool fundamental = Utility::FundamentalSerializable<T>::value>
             class JsonSerializeTraits
             {
                 public:
                     enum { type = Invalid };
-                    static void scanner(Parser::ScannerBaseSax&,T&)         {}
-                    static void printer(Parser::PrinterBaseSax&,T const&)   {}
+                    static void scanner(Parser::ScannerBaseSax&,T&)
+                    {}
+                    static void printer(Parser::PrinterBaseSax&,T const&)
+                    {}
+            };
+
+            template<typename T>
+            class JsonSerializeTraits<T, true>
+            {
+                public:
+                    enum { type = Invalid };
+                    static void scanner(Parser::ScannerBaseSax&,T&)
+                    {}
+                    static void printer(Parser::PrinterBaseSax& printer,T const& object)
+                    {
+                        printer << object;
+                    }
             };
         }
 
@@ -190,6 +218,8 @@ struct DoPreActionForMember;
 
 template<int TypeSpecialization>
 class ObjectPrinter;
+template<int TypeSpecialization>
+class PrefixPrinter;
 
 template<>
 class ObjectPrinter<Json::Map>
@@ -219,6 +249,24 @@ class ObjectPrinter<Json::Array>
         ~ObjectPrinter()
         {
             printer.arrayEnd();
+        }
+};
+template<>
+class PrefixPrinter<Json::Map>
+{
+    public:
+        PrefixPrinter(Parser::PrinterBaseSax& printer, std::string const& name)
+        {
+            printer << ",\"" << name << "\": ";
+        }
+};
+template<>
+class PrefixPrinter<Json::Array>
+{
+    public:
+        PrefixPrinter(Parser::PrinterBaseSax& printer, std::string const&)
+        {
+            printer << ",";
         }
 };
 
@@ -276,8 +324,15 @@ template<typename T, typename M, int TypeSpecialization>
 class MemberPrinter
 {
     public:
-        MemberPrinter(Parser::PrinterBaseSax&, T const& , std::string const& , M )
-        {}
+        MemberPrinter(Parser::PrinterBaseSax& printer, T const& object, std::string const& name, M src)
+        {
+            PrefixPrinter<TypeSpecialization>   prefixPrinter(printer, name);
+
+            using ObjRefType    = decltype(const_cast<T&>(object).*src);
+            using ObjType       = typename std::remove_reference<ObjRefType>::type;
+            using Traits        = ThorsAnvil::Serialize::Json::JsonSerializeTraits<ObjType>;
+            Traits::printer(printer, (object.*src));
+        }
 };
 
 template<typename ValueType>
