@@ -11,29 +11,29 @@
 #define THOR_BUILD_SERIALIZE_COUNT_ARGS_ACT(_1,_2,_3,_4,_5,_6,_7,_8,_9,_10,_11,_12,_13,_14,_15,_16,_17,_18,_19,_20,N,...)   N
 
 #define THORSANVIL_SERIALIZE_JsonAttribute(x)                     typedef int x
-#define THOR_BUILD_Attribute_Type(Type, ...)                      THOR_BUILD_Attribute_TypeC1(THOR_BUILD_SERIALIZE_COUNT_ARGS(__VA_ARGS__), Type, __VA_ARGS__)
-#define THOR_BUILD_Attribute_TypeC1(Count, Type, ...)             THOR_BUILD_Attribute_TypeC2(Count, Type, __VA_ARGS__)
-#define THOR_BUILD_Attribute_TypeC2(Count, Type, ...)             THOR_BUILD_Attribute_Type ## Count(Type, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type20(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type19(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type19(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type18(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type18(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type17(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type17(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type16(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type16(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type15(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type15(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type14(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type14(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type13(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type13(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type12(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type12(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type11(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type11(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type10(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type10(Type, local, member, ...)     MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type9(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type9(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type8(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type8(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type7(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type7(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type6(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type6(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type5(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type5(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type4(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type4(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type3(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type3(Type, local, member, ...)      MemberAccess<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type2(Type, local, __VA_ARGS__)
-#define THOR_BUILD_Attribute_Type2(Type, local, member)           MemberAccess<local, decltype(&local::member), Type>
-#define THOR_BUILD_Attribute_Type1(Type, local)
+#define THOR_BUILD_Attribute_Type(OType, Type, ...)                      THOR_BUILD_Attribute_TypeC1(THOR_BUILD_SERIALIZE_COUNT_ARGS(__VA_ARGS__), OType, Type, __VA_ARGS__)
+#define THOR_BUILD_Attribute_TypeC1(Count, OType, Type, ...)             THOR_BUILD_Attribute_TypeC2(Count, OType, Type, __VA_ARGS__)
+#define THOR_BUILD_Attribute_TypeC2(Count, OType, Type, ...)             THOR_BUILD_Attribute_Type ## Count(OType, Type, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type20(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type19(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type19(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type18(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type18(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type17(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type17(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type16(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type16(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type15(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type15(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type14(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type14(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type13(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type13(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type12(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type12(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type11(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type11(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type10(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type10(OType, Type, local, member, ...)     OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type9(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type9(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type8(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type8(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type7(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type7(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type6(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type6(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type5(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type5(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type4(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type4(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type3(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type3(OType, Type, local, member, ...)      OType<local, decltype(&local::member), Type>, THOR_BUILD_Attribute_Type2(OType, Type, local, __VA_ARGS__)
+#define THOR_BUILD_Attribute_Type2(OType, Type, local, member)           OType<local, decltype(&local::member), Type>
+#define THOR_BUILD_Attribute_Type1(OType, Type, local)
 
 #define THOR_BUILD_Initialize_Val(Sc, Obj, ...)                  THOR_BUILD_Initialize_ValC1(THOR_BUILD_SERIALIZE_COUNT_ARGS(__VA_ARGS__), Sc, Obj, __VA_ARGS__)
 #define THOR_BUILD_Initialize_ValC1(Count, Sc, Obj, ...)         THOR_BUILD_Initialize_ValC2(Count, Sc, Obj, __VA_ARGS__)
@@ -101,21 +101,26 @@ namespace ThorsAnvil                                                            
             class JsonSerializeTraits<THOR_BUILD_GetLocal(__VA_ARGS__)>                 \
             {                                                                           \
                 typedef std::tuple<                                                     \
-                    THOR_BUILD_Attribute_Type(Type, __VA_ARGS__)                        \
-                          >   Pointers;                                                 \
-                Pointers    pointers;                                                   \
+                    THOR_BUILD_Attribute_Type(MemberScanner, Type, __VA_ARGS__)         \
+                          >   Scanners;                                                 \
+                typedef std::tuple<                                                     \
+                    THOR_BUILD_Attribute_Type(MemberPrinter, Type, __VA_ARGS__)         \
+                          >   Printers;                                                 \
                 public:                                                                 \
                 enum { type = Type };                                                   \
                 using   LocalType = THOR_BUILD_GetLocal(__VA_ARGS__);                   \
                                                                                         \
                 static void scanner(Parser::ScannerBaseSax& scanner, LocalType& object) \
                 {                                                                       \
-                    Pointers{                                                           \
+                    Scanners{                                                           \
                         THOR_BUILD_Initialize_Val(scanner, object, __VA_ARGS__)         \
                     };                                                                  \
                 }                                                                       \
                 static void printer(Parser::PrinterBaseSax& printer, LocalType const& object)   \
                 {                                                                       \
+                    Printers{                                                           \
+                        THOR_BUILD_Initialize_Val(printer, object, __VA_ARGS__)         \
+                    };                                                                  \
                 }                                                                       \
             };                                                                          \
         }                                                                               \
@@ -161,7 +166,7 @@ template<typename ValueType, int TypeSpecialization>
 struct DoPreActionForMember;
 
 template<typename T, typename M, int TypeSpecialization>
-class MemberAccess
+class MemberScanner
 {
     using SelfPtr       =  T*;
     using ValueTypeRef  =  decltype((SelfPtr(nullptr))->*(M(nullptr)));
@@ -170,9 +175,9 @@ class MemberAccess
     T&                  object;
     M                   dst;
 
-    class MemberAccessAction: public Parser::SaxAction
+    class MemberScannerAction: public Parser::SaxAction
     {
-        MemberAccess&   member;
+        MemberScanner&   member;
         virtual void doAction(Parser::ScannerBaseSax& scanner, Parser::Key const& key, Parser::ParserValue const& value)
         {
             T&      object   = this->member.object;
@@ -190,14 +195,14 @@ class MemberAccess
             action(scanner, key, (object.*dst));
         }
         public:
-            MemberAccessAction(MemberAccess& member)
+            MemberScannerAction(MemberScanner& member)
                 : member(member)
             {}
     };
 
-    friend class MemberAccessAction;
+    friend class MemberScannerAction;
     public:
-        MemberAccess(Parser::ScannerBaseSax& serializer, T& object, std::string const& name, M dst)
+        MemberScanner(Parser::ScannerBaseSax& serializer, T& object, std::string const& name, M dst)
             : object(object)
             , dst(dst)
         {
@@ -205,9 +210,16 @@ class MemberAccess
             // 88         ActionRefNote   registerActionNext(std::unique_ptr<SaxAction> action);
             // 89         ActionRefNote   registerActionOnAllMapItems(std::unique_ptr<SaxAction> action);
             // 90         ActionRefNote   registerActionOnAllArrItems(std::unique_ptr<SaxAction> action);
-            std::unique_ptr<Parser::SaxAction>  action(new MemberAccessAction(*this));
+            std::unique_ptr<Parser::SaxAction>  action(new MemberScannerAction(*this));
             serializer.registerAction(name, std::move(action));
         }
+};
+template<typename T, typename M, int TypeSpecialization>
+class MemberPrinter
+{
+    public:
+        MemberPrinter(Parser::PrinterBaseSax&, T const& , std::string const& , M )
+        {}
 };
 
 template<typename ValueType>
