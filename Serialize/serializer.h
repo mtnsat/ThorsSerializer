@@ -107,11 +107,13 @@ namespace ThorsAnvil                                                            
                 public:                                                                 \
                 enum { type = Type };                                                   \
                 using   LocalType = THOR_BUILD_GetLocal(__VA_ARGS__);                   \
-                JsonSerializeTraits(Parser::ScannerBaseSax& scanner, LocalType& object) \
-                    : pointers{                                                         \
-                    THOR_BUILD_Initialize_Val(scanner, object, __VA_ARGS__)             \
-                      }                                                                 \
-                {}                                                                      \
+                                                                                        \
+                static void scanner(Parser::ScannerBaseSax& scanner, LocalType& object) \
+                {                                                                       \
+                    Pointers{                                                           \
+                        THOR_BUILD_Initialize_Val(scanner, object, __VA_ARGS__)         \
+                    };                                                                  \
+                }                                                                       \
             };                                                                          \
         }                                                                               \
     }                                                                                   \
@@ -133,7 +135,7 @@ namespace ThorsAnvil
             {
                 public:
                     enum { type = Invalid };
-                    JsonSerializeTraits(Parser::ScannerBaseSax&,T&){}
+                    static void scanner(Parser::ScannerBaseSax&,T&){}
             };
         }
 
@@ -258,7 +260,7 @@ class Importer
         typedef ThorsAnvil::Serialize::Json::JsonSerializeTraits<T>    Traits;
 
         Serializer      serializer;
-        Traits          traits(serializer, data.object);
+        Traits::scanner(serializer, data.object);
 
         serializer.parse(stream);
         return stream;
