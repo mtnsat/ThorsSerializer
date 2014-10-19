@@ -10,7 +10,8 @@ namespace ThorsAnvil
     {
 
 struct ParserValue;
-typedef boost::ptr_map<std::string, ParserValue> Storage; 
+typedef boost::ptr_map<std::string, ParserValue>    Storage; 
+typedef std::map<std::string, std::string>          Attributes;
 
 
     }

@@ -123,8 +123,6 @@ template<> struct ParseTrait<std::string>       { typedef std::string  GetType;}
  */
 struct ParserValue
 {
-    private:
-    typedef std::map<std::string, std::string>              Attributes;
     public:
     std::string                                             value;  /* The parsed value */
     typedef Attributes::iterator            AttrIterator;
@@ -147,16 +145,7 @@ struct ParserValue
 
     void                setAttribute(std::string const& name, std::string const& v)             {attributes[name] = v;}
     void                delAttribute(std::string const& name)                                   {attributes.erase(attributes.find(name));}
-    AttrConstIterator   attrBegin() const                                                       {return attributes.begin();}
-    AttrConstIterator   attrEnd() const                                                         {return attributes.end();}
-    std::string         getAttribute(std::string const& name, std::string const& d = "") const
-    {
-        auto find = attributes.find(name);
-        if (find == attributes.end())
-        {   return d;
-        }
-        return find->second;
-    }
+    Attributes const&   getAttributes() const                                                   {return attributes;}
 
     private:
     Attributes              attributes;

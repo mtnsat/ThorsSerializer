@@ -20,98 +20,69 @@ struct YamlSerializeVisitor: public Parser::ParserValueConstVisitor
         , docStart(false)
     {}
 
-    void writeDocStart(Parser::ParserValue const& item)
+    class DocWriter
     {
-        docStart    = true;
-        std::vector<yaml_tag_directive_t>      directives;
+        bool                        started;
+        bool&                       docStart;
+        Parser::ParserValue const&  item;
+        YamlEmitter&                emitter;
 
-        for(auto loop = item.attrBegin(); loop != item.attrEnd(); ++loop)
+      public:
+        DocWriter(bool& docStart, Parser::ParserValue const& item, YamlEmitter& emitter)
+            : started(docStart)
+            , docStart(docStart)
+            , item(item)
+            , emitter(emitter)
         {
-            std::string const& handle   = loop->first;
-            std::string const& key      = loop->second;
-            if (handle.substr(0,4) == "dir:")
+            if (!started)
             {
-                yaml_tag_directive_t   dir;
-                dir.handle = convertStringToYamlCharPtr(handle) + 4;
-                dir.prefix = convertStringToYamlCharPtr(key);
-                directives.push_back(dir);
+                docStart    = true;
+                emitter.writeDocStart(item.getAttributes());
             }
         }
-        emitter.writeDocStart(item.getAttribute("version", "-1.0"), directives, item.getAttribute("implicitHead", "1"));
-    }
-    void writeDocEnd(Parser::ParserValue const& item)
-    {
-        emitter.writeDocEnd(item.getAttribute("implicitTail", "1"));
-        docStart    = false;
-    }
-
-    void doWrite(std::function<void(std::string const&, std::string const&, int, int, int)> action, Parser::ParserValue const& item)
-    {
-        bool    start   = docStart;
-        if (!start)
-        {   writeDocStart(item);
+        ~DocWriter()
+        {
+            if (!started)
+            {
+                emitter.writeDocEnd(item.getAttributes());
+                docStart    = false;
+            }
         }
-        std::string const&  anchor          = item.getAttribute("anchor");
-        std::string const&  tag             = item.getAttribute("tag");
-        int                 plain_implicit  = std::stoi(item.getAttribute("plain_implicit"));
-        int                 quoted_implicit = std::stoi(item.getAttribute("quoted_implicit"));
-        int                 style           = std::stoi(item.getAttribute("style"));
-
-        action(anchor, tag, plain_implicit, quoted_implicit, style);
-        if (!start)
-        {   writeDocEnd(item);
-        }
-    }
-
-    void doWriteContainer(std::function<void(std::string const& anchor, std::string const& tag, int i, int s)> action, Parser::ParserValue const& item)
-    {
-        bool    start   = docStart;
-        if (!start)
-        {   writeDocStart(item);
-        }
-        std::string const&  anchor          = item.getAttribute("anchor");
-        std::string const&  tag             = item.getAttribute("tag");
-        int                 implicit        = std::stoi(item.getAttribute("implicit"));
-        int                 style           = std::stoi(item.getAttribute("style"));
-
-        action(anchor, tag, implicit, style);
-    }
+    };
 
     virtual void visit(Parser::ParserStringItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeString(item.value, anchor, tag, pi, qi, s);}, item);
+        DocWriter   writer(docStart, item, emitter);
+        emitter.writeString(item.value, item.getAttributes());
     }
     virtual void visit(Parser::ParserNumberItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNumber(item.value, anchor, tag, pi, qi, s);}, item);
+        DocWriter   writer(docStart, item, emitter);
+        emitter.writeNumber(item.value, item.getAttributes());
     }
     virtual void visit(Parser::ParserBoolItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeBool(item.value, anchor, tag, pi, qi, s);}, item);
+        DocWriter   writer(docStart, item, emitter);
+        emitter.writeBool(item.value, item.getAttributes());
     }
     virtual void visit(Parser::ParserNULLItem const& item)
     {
-        doWrite([&item,this](std::string const& anchor, std::string const& tag, int pi, int qi, int s){this->emitter.writeNull(item.value, anchor, tag, pi, qi, s);}, item);
+        DocWriter   writer(docStart, item, emitter);
+        emitter.writeNull(item.value, item.getAttributes());
     }
     virtual void visit(Parser::ParserMapItem const& item)
     {
-        bool    start   = docStart;
-        doWriteContainer([this](std::string const& anchor, std::string const& tag, int i, int s){this->emitter.writeMapStart(anchor, tag, i, s);}, item);
+        DocWriter   writer(docStart, item, emitter);
+        emitter.writeMapStart(item.getAttributes());
         item.value->accept(*this);
-        emitter.writeMapEnd();
-        if (!start)
-        {   writeDocEnd(item);
-        }
+        emitter.writeMapEnd(item.getAttributes());
     }
     virtual void visit(Parser::ParserArrayItem const& item)
     {
-        bool    start   = docStart;
-        doWriteContainer([this](std::string const& anchor, std::string const& tag, int i, int s){this->emitter.writeArrayStart(anchor, tag, i, s);}, item);
+        DocWriter   writer(docStart, item, emitter);
+        emitter.writeArrayStart(item.getAttributes());
         item.value->accept(*this);
-        emitter.writeArrayEnd();
-        if (!start)
-        {   writeDocEnd(item);
-        }
+        emitter.writeArrayEnd(item.getAttributes());
     }
     virtual void visit(Parser::ParserArray const& node)
     {

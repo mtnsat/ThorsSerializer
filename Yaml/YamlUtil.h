@@ -10,7 +10,8 @@ namespace ThorsAnvil
     namespace Yaml
     {
 
-yaml_char_t* convertStringToYamlCharPtr(std::string const& value);
+enum EmptyStringAction {EmptyStringIsNull, UseEmptyString};
+yaml_char_t* convertStringToYamlCharPtr(std::string const& value, EmptyStringAction action = EmptyStringIsNull);
 std::string  convertYamlCharPtrToString(yaml_char_t const* value);
 
     }

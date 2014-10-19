@@ -59,41 +59,57 @@ int YamlEmitter::writeHandler(unsigned char* buffer, std::size_t size)
    YAML_FOLDED_SCALAR_STYLE
 #endif
 
-void YamlEmitter::writeString(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
+std::string YamlEmitter::getAttribute(Parser::Attributes const& attributes, std::string const& name, std::string const& d) const
 {
+    auto find = attributes.find(name);
+    if (find == attributes.end())
+    {   return d;
+    }
+    return find->second;
+}
+
+bool YamlEmitter::writeScalar(std::string const& value, Parser::Attributes const& attributes)
+{
+    yaml_char_t*  data            = convertStringToYamlCharPtr(value, UseEmptyString);
+    yaml_char_t*  anchor          = convertStringToYamlCharPtr(getAttribute(attributes, "anchor", ""));
+    yaml_char_t*  tag             = convertStringToYamlCharPtr(getAttribute(attributes, "tag", ""));
+    int           plain_implicit  = std::stoi(getAttribute(attributes, "plain_implicit",  "0"));
+    int           quoted_implicit = std::stoi(getAttribute(attributes, "quoted_implicit", "0"));
+    int           style           = std::stoi(getAttribute(attributes, "style",           "0"));
+
     yaml_event_t    event;
-    unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
+    return (yaml_scalar_event_initialize(&event, anchor, tag, data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) != 0)
+        && (yaml_emitter_emit(&emitter, &event) != 0);
+}
+
+
+void YamlEmitter::writeString(std::string const& value, Parser::Attributes const& attributes)
+{
+    if (!writeScalar(value, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeString: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeNumber(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
+void YamlEmitter::writeNumber(std::string const& value, Parser::Attributes const& attributes)
 {
-    yaml_event_t    event;
-    unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
+    if (!writeScalar(value, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeNumber: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeBool(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
+void YamlEmitter::writeBool(std::string const& value, Parser::Attributes const& attributes)
 {
-    yaml_event_t    event;
-    unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
+    if (!writeScalar(value, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeBool: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeNull(std::string const& value, std::string const& anchor, std::string const& tag, int plain_implicit, int quoted_implicit, int style)
+void YamlEmitter::writeNull(std::string const& value, Parser::Attributes const& attributes)
 {
-    yaml_event_t    event;
-    unsigned char*  data    = reinterpret_cast<unsigned char*>(const_cast<char*>(value.c_str()));
-    if (!yaml_scalar_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), data, value.size(), plain_implicit,  quoted_implicit, static_cast<yaml_scalar_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
+    if (!writeScalar(value, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeNull: Failed scalar_event_initialize");
     }
@@ -104,20 +120,34 @@ void YamlEmitter::writeNull(std::string const& value, std::string const& anchor,
     YAML_BLOCK_MAPPING_STYLE    The block mapping style.
     YAML_FLOW_MAPPING_STYLE     The flow mapping style.
 #endif
-void YamlEmitter::writeMapStart(std::string const& anchor, std::string const& tag, int implicit, int style)
+
+
+template<typename T>
+bool YamlEmitter::writeCompund(int (*CompoundEventInit)(yaml_event_t*, yaml_char_t*, yaml_char_t*, int, T), Parser::Attributes const& attributes)
+{
+    yaml_char_t*    anchor          = convertStringToYamlCharPtr(getAttribute(attributes, "anchor", ""));
+    yaml_char_t*    tag             = convertStringToYamlCharPtr(getAttribute(attributes, "tag",    ""));
+    int             implicit        = std::stoi(getAttribute(attributes, "implicit", "0"));
+    int             style           = std::stoi(getAttribute(attributes, "style",    "0"));
+
+    yaml_event_t    event;
+    return (CompoundEventInit(&event, anchor, tag, implicit, static_cast<T>(style)) != 0)
+        && (yaml_emitter_emit(&emitter, &event) != 0);
+}
+
+void YamlEmitter::writeMapStart(Parser::Attributes const& attributes)
 {
     /* Note:
        Either Tag or implicit must be set
     */
-    yaml_event_t    event;
-    if (!yaml_mapping_start_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), implicit, static_cast<yaml_mapping_style_t>(style))   || !yaml_emitter_emit(&emitter, &event))
+    if (!writeCompund(yaml_mapping_start_event_initialize, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeMapStart: Failed scalar_event_initialize");
     }
 }
 
 
-void YamlEmitter::writeMapEnd()
+void YamlEmitter::writeMapEnd(Parser::Attributes const&)
 {
     yaml_event_t    event;
     if (!yaml_mapping_end_event_initialize(&event) || !yaml_emitter_emit(&emitter, &event))
@@ -137,19 +167,18 @@ void YamlEmitter::writeMapEnd()
   YAML_FLOW_SEQUENCE_STYLE
 #endif
 
-void YamlEmitter::writeArrayStart(std::string const& anchor, std::string const& tag, int implicit, int style)
+void YamlEmitter::writeArrayStart(Parser::Attributes const& attributes)
 {
     /* Note:
        Either Tag or implicit must be set
     */
-    yaml_event_t    event;
-    if (!yaml_sequence_start_event_initialize(&event, convertStringToYamlCharPtr(anchor), convertStringToYamlCharPtr(tag), implicit, static_cast<yaml_sequence_style_t>(style)) || !yaml_emitter_emit(&emitter, &event))
+    if (!writeCompund(yaml_sequence_start_event_initialize, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeArrayStart: Failed sequence_start_event_initialize");
     }
 }
 
-void YamlEmitter::writeArrayEnd()
+void YamlEmitter::writeArrayEnd(Parser::Attributes const&)
 {
     yaml_event_t    event;
     if (!yaml_sequence_end_event_initialize(&event) || !yaml_emitter_emit(&emitter, &event))
@@ -158,14 +187,32 @@ void YamlEmitter::writeArrayEnd()
     }
 }
 
-void YamlEmitter::writeDocStart(std::string const& version, std::vector<yaml_tag_directive_t> const& directives, std::string const& implicit)
+void YamlEmitter::writeDocStart(Parser::Attributes const& attributes)
+{
     /*
     yaml_version_directive_t *      version_directive,
     yaml_tag_directive_t *      tag_directives_start,
     yaml_tag_directive_t *      tag_directives_end,
     int     implicit
     */
-{
+
+    std::string const&                  version     = getAttribute(attributes, "version", "-1.0");
+    std::string const&                  implicit    = getAttribute(attributes, "implicitHead", "1");
+    std::vector<yaml_tag_directive_t>   directives;
+
+    for(auto loop = attributes.begin(); loop != attributes.end(); ++loop)
+    {
+        std::string const& handle   = loop->first;
+        std::string const& key      = loop->second;
+        if (handle.substr(0,4) == "dir:")
+        {
+            yaml_tag_directive_t   dir;
+            dir.handle = convertStringToYamlCharPtr(handle) + 4;
+            dir.prefix = convertStringToYamlCharPtr(key);
+            directives.push_back(dir);
+        }
+    }
+
     bool                        hasDirective = false;
     yaml_version_directive_t    vDirective;
     if (version != "-1.0")
@@ -195,9 +242,9 @@ void YamlEmitter::writeDocStart(std::string const& version, std::vector<yaml_tag
         throw std::runtime_error("YamlEmitter::writeDocStart: Failed document_start_event_initialize");
     }
 }
-void YamlEmitter::writeDocEnd(std::string const& implicit)
+void YamlEmitter::writeDocEnd(Parser::Attributes const& attributes)
 {
-    int implicitVal     = std:: stoi(implicit);
+    int implicitVal     = std:: stoi(getAttribute(attributes, "implicitTail", "1"));
     yaml_event_t    event;
     if (!yaml_document_end_event_initialize(&event, implicitVal) || !yaml_emitter_emit(&emitter, &event))
     {

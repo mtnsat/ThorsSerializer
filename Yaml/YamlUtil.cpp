@@ -1,9 +1,9 @@
 
 #include "YamlUtil.h"
 
-yaml_char_t* ThorsAnvil::Yaml::convertStringToYamlCharPtr(std::string const& value)
+yaml_char_t* ThorsAnvil::Yaml::convertStringToYamlCharPtr(std::string const& value, EmptyStringAction action)
 {
-    if (value == "")
+    if (action == EmptyStringIsNull && value == "")
     {   return nullptr;
     }
     return reinterpret_cast<yaml_char_t*>(const_cast<char*>(value.c_str()));
