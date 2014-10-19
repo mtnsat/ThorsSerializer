@@ -12,7 +12,7 @@ extern "C" int writeHandlerCB(void* ext, unsigned char* buffer, std::size_t size
 }
 
 YamlEmitter::YamlEmitter(std::ostream& stream)
-    : stream(stream)
+    : EmitterInterface(stream)
 {
     yaml_emitter_initialize(&emitter);
     yaml_emitter_set_output(&emitter, writeHandlerCB, this);

@@ -2,7 +2,7 @@
 #ifndef THORSANVIL_YAML_YAML_EMITTER_H
 #define THORSANVIL_YAML_YAML_EMITTER_H
 
-#include "Parser/ParserCommon.h"
+#include "Parser/EmitterInterface.h"
 #include <ostream>
 #include <vector>
 #include <yaml.h>
@@ -14,9 +14,9 @@ namespace ThorsAnvil
 
 extern "C" int writeHandlerCB(void* ext, unsigned char* buffer, std::size_t size);
 
-class YamlEmitter
+class YamlEmitter: public Parser::EmitterInterface
 {
-    std::ostream&   stream;
+    //std::ostream&   stream;
     yaml_emitter_t  emitter;
 
     std::string getAttribute(Parser::Attributes const& attributes, std::string const& name, std::string const& d) const;
@@ -31,16 +31,16 @@ class YamlEmitter
         YamlEmitter(std::ostream& stream);
         ~YamlEmitter();
 
-        void writeString(std::string const& value, Parser::Attributes const& attributes);
-        void writeNumber(std::string const& value, Parser::Attributes const& attributes);
-        void writeBool(std::string const& value, Parser::Attributes const& attributes);
-        void writeNull(std::string const& value, Parser::Attributes const& attributes);
-        void writeMapStart(Parser::Attributes const& attributes);
-        void writeMapEnd(Parser::Attributes const& attributes);
-        void writeArrayStart(Parser::Attributes const& attributes);
-        void writeArrayEnd(Parser::Attributes const& attributes);
-        void writeDocStart(Parser::Attributes const& attributes);
-        void writeDocEnd(Parser::Attributes const& attributes);
+        virtual void writeString(std::string const& value, Parser::Attributes const& attributes)override;
+        virtual void writeNumber(std::string const& value, Parser::Attributes const& attributes)override;
+        virtual void writeBool(std::string const& value, Parser::Attributes const& attributes)  override;
+        virtual void writeNull(std::string const& value, Parser::Attributes const& attributes)  override;
+        virtual void writeMapStart(Parser::Attributes const& attributes)                        override;
+        virtual void writeMapEnd(Parser::Attributes const& attributes)                          override;
+        virtual void writeArrayStart(Parser::Attributes const& attributes)                      override;
+        virtual void writeArrayEnd(Parser::Attributes const& attributes)                        override;
+        virtual void writeDocStart(Parser::Attributes const& attributes)                        override;
+        virtual void writeDocEnd(Parser::Attributes const& attributes)                          override;
 };
 
     }
