@@ -19,6 +19,7 @@ namespace ThorsAnvil
                 {}
                 virtual ~EmitterInterface()
                 {}
+
                 template<typename T>
                 EmitterInterface& operator<<(T const& val)    {stream << val;return *this;}
 

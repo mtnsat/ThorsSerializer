@@ -20,7 +20,7 @@ TEST(ScannerDom, ShiftReduceScanMapEmpty)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    ParserMap&  map    = scanner.getMap();
+    ParserValue&  map    = scanner.getValue();
 }
 
 TEST(ScannerDom, ShiftReduceScanArrayEmpty)
@@ -30,7 +30,7 @@ TEST(ScannerDom, ShiftReduceScanArrayEmpty)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    ParserArray& array = scanner.getArray();
+    ParserValue& array = scanner.getValue();
 }
 
 TEST(ScannerDom, RecursiveScanMapEmpty)
@@ -40,7 +40,7 @@ TEST(ScannerDom, RecursiveScanMapEmpty)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    ParserMap&  map    = scanner.getMap();
+    ParserValue&  map    = scanner.getValue();
 }
 
 TEST(ScannerDom, RecursiveScanArrayEmpty)
@@ -50,7 +50,7 @@ TEST(ScannerDom, RecursiveScanArrayEmpty)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    ParserArray& array = scanner.getArray();
+    ParserValue& array = scanner.getValue();
 }
 
 
@@ -61,7 +61,7 @@ TEST(ScannerDom, ShiftReduceScanMap)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    ParserMap&  map    = scanner.getMap();
+    ParserValue&  map    = scanner.getValue();
 }
 
 TEST(ScannerDom, ShiftReduceScanArray)
@@ -71,7 +71,7 @@ TEST(ScannerDom, ShiftReduceScanArray)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    ParserArray& array = scanner.getArray();
+    ParserValue& array = scanner.getValue();
 }
 
 TEST(ScannerDom, RecursiveScanMap)
@@ -81,7 +81,7 @@ TEST(ScannerDom, RecursiveScanMap)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    ParserMap&  map    = scanner.getMap();
+    ParserValue&  map    = scanner.getValue();
 }
 
 TEST(ScannerDom, RecursiveScanArray)
@@ -91,7 +91,7 @@ TEST(ScannerDom, RecursiveScanArray)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    ParserArray& array = scanner.getArray();
+    ParserValue& array = scanner.getValue();
 }
 
 

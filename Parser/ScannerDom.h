@@ -1,4 +1,3 @@
-
 #ifndef THORSANVIL_PARSER_PARSER_SCANNER_DOM_H
 #define THORSANVIL_PARSER_PARSER_SCANNER_DOM_H
 
@@ -17,22 +16,11 @@ class ScannerDom
     ParserObjectType                type;
     std::unique_ptr<ParserValue>    result;
 
-    void validate(ParserObjectType valueType)
-    {
-        if (result.get() == nullptr)
-        {   throw std::runtime_error("Invalid Type: No result set");
-        }
-        if (type != valueType)
-        {   throw std::runtime_error("Invalid Type: Different result set by parser");
-        }
-    }
 
     public:
     template<typename Parser>
     ParserObjectType parse(std::istream& stream);
-    ParserMap&     getMap()       { validate(ParserMapObject);  return *(static_cast<ParserMapItem&>(*result).value);}
-    ParserArray&   getArray()     { validate(ParserArrayObject);return *(static_cast<ParserArrayItem&>(*result).value);}
-    ParserValue&   getValue()     { validate(ParserValueObject);return *result;}
+    ParserValue&   getValue()     { return *result;}
 };
 
 class ScannerDomInterface: public ParserDomInterface

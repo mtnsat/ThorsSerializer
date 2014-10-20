@@ -7,8 +7,7 @@
 
 using ThorsAnvil::Yaml::YamlParser;
 using ThorsAnvil::Yaml::YamlScannerDom;
-using ThorsAnvil::Parser::ParserMap;
-using ThorsAnvil::Parser::ParserArray;
+using ThorsAnvil::Parser::ParserValue;
 
 TEST(ScannerDom, ScanMapEmpty)
 {
@@ -17,7 +16,7 @@ TEST(ScannerDom, ScanMapEmpty)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    ParserMap&  map    = scanner.getMap();
+    ParserValue&  map    = scanner.getValue();
 }
 
 TEST(ScannerDom, ScanArrayEmpty)
@@ -27,7 +26,7 @@ TEST(ScannerDom, ScanArrayEmpty)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    ParserArray& array = scanner.getArray();
+    ParserValue& array = scanner.getValue();
 }
 
 TEST(ScannerDom, ScanMap)
@@ -37,7 +36,7 @@ TEST(ScannerDom, ScanMap)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserMapObject);
 
-    ParserMap&  map    = scanner.getMap();
+    ParserValue&  map    = scanner.getValue();
 }
 
 TEST(ScannerDom, ScanArray)
@@ -47,7 +46,7 @@ TEST(ScannerDom, ScanArray)
 
     ASSERT_TRUE(scanner.parse(json) == ThorsAnvil::Parser::ParserArrayObject);
 
-    ParserArray& array = scanner.getArray();
+    ParserValue& array = scanner.getValue();
 }
 
 

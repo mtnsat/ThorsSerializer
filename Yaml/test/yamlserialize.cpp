@@ -3,7 +3,6 @@
 #include "YamlParser.h"
 #include "YamlScanner.h"
 #include "YamlEmitter.h"
-#include "Json/DomSerialize.h"
 #include "Parser/DomSerialize.h"
 #include "Parser/ParserDom.h"
 #include "Parser/ParserDomVisit.h"

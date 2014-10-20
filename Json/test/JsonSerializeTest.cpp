@@ -1,10 +1,12 @@
 
 #include "gtest/gtest.h"
-#include "DomSerialize.h"
 #include "JsonScanner.h"
+#include "JsonEmitter.h"
+#include "Parser/DomSerialize.h"
 
 using ThorsAnvil::Json::JsonScannerDom;
-using ThorsAnvil::Json::DomSerialize;
+using ThorsAnvil::Json::JsonEmitter;
+using ThorsAnvil::Parser::DomSerialize;
 
 TEST(JsonSerialize, EmptyMap)
 {
@@ -14,7 +16,7 @@ TEST(JsonSerialize, EmptyMap)
     ASSERT_EQ(ThorsAnvil::Parser::ParserMapObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getMap());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("{}", result.str());
 }
 
@@ -26,7 +28,7 @@ TEST(JsonSerialize, EmptyArray)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[]", result.str());
 }
 
@@ -38,7 +40,7 @@ TEST(JsonSerialize, ArrayEmptyString)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[\"\"]", result.str());
 }
 
@@ -50,7 +52,7 @@ TEST(JsonSerialize, ArrayFullString)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[\"Hi there\"]", result.str());
 }
 
@@ -62,7 +64,7 @@ TEST(JsonSerialize, ArrayNumber)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[56]", result.str());
 }
 
@@ -74,7 +76,7 @@ TEST(JsonSerialize, ArrayNull)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[null]", result.str());
 }
 
@@ -86,7 +88,7 @@ TEST(JsonSerialize, EmptyBool)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[true]", result.str());
 }
 
@@ -98,7 +100,7 @@ TEST(JsonSerialize, ArrayWithEverything)
     ASSERT_EQ(ThorsAnvil::Parser::ParserArrayObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getArray());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("[\"A string\", 45.67, null, false]", result.str());
 }
 TEST(JsonSerialize, MapWithEverything)
@@ -109,7 +111,7 @@ TEST(JsonSerialize, MapWithEverything)
     ASSERT_EQ(ThorsAnvil::Parser::ParserMapObject, scanner.parse(json));
 
     std::stringstream   result;
-    result  << DomSerialize(scanner.getMap());
+    result  << DomSerialize<JsonEmitter>(scanner.getValue());
     ASSERT_EQ("{\"Bool\": false, \"Null\": null, \"Number\": 45.67, \"String\": \"A string\"}", result.str());
 }
 

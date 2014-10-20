@@ -2,40 +2,40 @@
 #include "DomSerialize.h"
 
 
-namespace ThorsAnvil
-{
-    namespace Parser
-    {
+using namespace ThorsAnvil::Parser;
 
-class DocWriter
+namespace details
 {
-    bool                        started;
-    bool&                       docStart;
-    ParserValue const&          item;
-    EmitterInterface&           emitter;
+    class DocWriter
+    {
+        bool                        started;
+        bool&                       docStart;
+        ParserValue const&          item;
+        EmitterInterface&           emitter;
 
-  public:
-    DocWriter(bool& docStart, ParserValue const& item, EmitterInterface& emitter)
-        : started(docStart)
-        , docStart(docStart)
-        , item(item)
-        , emitter(emitter)
-    {
-        if (!started)
+      public:
+        DocWriter(bool& docStart, ParserValue const& item, EmitterInterface& emitter)
+            : started(docStart)
+            , docStart(docStart)
+            , item(item)
+            , emitter(emitter)
         {
-            docStart    = true;
-            emitter.writeDocStart(item.getAttributes());
+            if (!started)
+            {
+                docStart    = true;
+                emitter.writeDocStart(item.getAttributes());
+            }
         }
-    }
-    ~DocWriter()
-    {
-        if (!started)
+        ~DocWriter()
         {
-            emitter.writeDocEnd(item.getAttributes());
-            docStart    = false;
+            if (!started)
+            {
+                emitter.writeDocEnd(item.getAttributes());
+                docStart    = false;
+            }
         }
-    }
-};
+    };
+}
 
 DomSerializeVisitor::DomSerializeVisitor(EmitterInterface& emitter)
     : emitter(emitter)
@@ -44,34 +44,34 @@ DomSerializeVisitor::DomSerializeVisitor(EmitterInterface& emitter)
 
 void DomSerializeVisitor::visit(ParserStringItem const& item)
 {
-    DocWriter   writer(docStart, item, emitter);
+    details::DocWriter   writer(docStart, item, emitter);
     emitter.writeString(item.value, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserNumberItem const& item)
 {
-    DocWriter   writer(docStart, item, emitter);
+    details::DocWriter   writer(docStart, item, emitter);
     emitter.writeNumber(item.value, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserBoolItem const& item)
 {
-    DocWriter   writer(docStart, item, emitter);
+    details::DocWriter   writer(docStart, item, emitter);
     emitter.writeBool(item.value, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserNULLItem const& item)
 {
-    DocWriter   writer(docStart, item, emitter);
+    details::DocWriter   writer(docStart, item, emitter);
     emitter.writeNull(item.value, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserMapItem const& item)
 {
-    DocWriter   writer(docStart, item, emitter);
+    details::DocWriter   writer(docStart, item, emitter);
     emitter.writeMapStart(item.getAttributes());
     item.value->accept(*this);
     emitter.writeMapEnd(item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserArrayItem const& item)
 {
-    DocWriter   writer(docStart, item, emitter);
+    details::DocWriter   writer(docStart, item, emitter);
     emitter.writeArrayStart(item.getAttributes());
     item.value->accept(*this);
     emitter.writeArrayEnd(item.getAttributes());
@@ -91,10 +91,6 @@ void DomSerializeVisitor::visit(ParserMap const& /*node*/, Storage const& mapDat
     {
         loopK->second->accept(*this);
         loopV->second->accept(*this);
-    }
-}
-
-
     }
 }
 

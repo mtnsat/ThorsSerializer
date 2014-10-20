@@ -28,7 +28,6 @@ inline DomSerializer<E, ParserMap>     DomSerialize(ParserMap   const& value)   
 template<typename E>
 inline DomSerializer<E, ParserArray>   DomSerialize(ParserArray const& value)     {return DomSerializer<E, ParserArray>(value);}
 
-
 struct DomSerializeVisitor: public ParserValueConstVisitor
 {
     EmitterInterface&    emitter;
