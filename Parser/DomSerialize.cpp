@@ -45,22 +45,22 @@ DomSerializeVisitor::DomSerializeVisitor(EmitterInterface& emitter)
 void DomSerializeVisitor::visit(ParserStringItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeString(item.value, item.getAttributes());
+    emitter.writeString(item);
 }
 void DomSerializeVisitor::visit(ParserNumberItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeNumber(item.value, item.getAttributes());
+    emitter.writeNumber(item);
 }
 void DomSerializeVisitor::visit(ParserBoolItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeBool(item.value, item.getAttributes());
+    emitter.writeBool(item);
 }
 void DomSerializeVisitor::visit(ParserNULLItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeNull(item.value, item.getAttributes());
+    emitter.writeNull(item);
 }
 void DomSerializeVisitor::visit(ParserMapItem const& item)
 {

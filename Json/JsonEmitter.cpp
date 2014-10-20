@@ -36,39 +36,24 @@ std::string const& JsonEmitter::seporator()
     return element;
 }
 
-void JsonEmitter::writeString(std::string const& value, Parser::Attributes const&)
+void JsonEmitter::writeString(Parser::ParserStringItem const& stringItem)
 {
-    stream << seporator() << '"' << value << '"';
+    stream << seporator() << '"' << stringItem.value << '"';
 }
 
-void JsonEmitter::writeNumber(std::string const& value, Parser::Attributes const&)
+void JsonEmitter::writeNumber(Parser::ParserNumberItem const& numberItem)
 {
-    stream << seporator() << value;
+    stream << seporator() << numberItem.value;
 }
 
-void JsonEmitter::writeNumber(long long value, Parser::Attributes const&)
+void JsonEmitter::writeBool(Parser::ParserBoolItem const& boolItem)
 {
-    stream << seporator() << value;
+    stream << seporator() << std::boolalpha << boolItem.boolValue;
 }
 
-void JsonEmitter::writeNumber(double value, Parser::Attributes const&)
+void JsonEmitter::writeNull(Parser::ParserNULLItem const&)
 {
-    stream << seporator() << value;
-}
-
-void JsonEmitter::writeBool(std::string const& value, Parser::Attributes const&)
-{
-    stream << seporator() << value;
-}
-
-void JsonEmitter::writeBool(bool value, Parser::Attributes const&)
-{
-    stream << seporator() << std::boolalpha << value;
-}
-
-void JsonEmitter::writeNull(std::string const& value, Parser::Attributes const&)
-{
-    stream << seporator() << value;
+    stream << seporator() << "null";
 }
 
 void JsonEmitter::writeMapStart(Parser::Attributes const&)
