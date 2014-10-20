@@ -38,7 +38,17 @@ std::string const& JsonEmitter::seporator()
 
 void JsonEmitter::writeString(Parser::ParserStringItem const& stringItem)
 {
-    stream << seporator() << '"' << stringItem.value << '"';
+    stream << seporator() << '"';
+    std::for_each(std::begin(stringItem.value), std::end(stringItem.value), [this](char next)
+    {
+        switch(next)
+        {
+            case '"':   stream   << "\\\"";          break;
+            case '\\':  stream   << "\\\\";          break;
+            default:    stream   << next;            break;
+        }
+    });
+    stream << '"';
 }
 
 void JsonEmitter::writeNumber(Parser::ParserNumberItem const& numberItem)
