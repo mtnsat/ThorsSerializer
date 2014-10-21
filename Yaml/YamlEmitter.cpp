@@ -68,11 +68,8 @@ std::string YamlEmitter::getAttribute(Parser::Attributes const& attributes, std:
     return find->second;
 }
 
-bool YamlEmitter::writeScalar(Parser::ParserValue const& item)
+bool YamlEmitter::writeScalar(std::string const& value, Parser::Attributes const& attributes)
 {
-    std::string         const&  value       = item.value;
-    Parser::Attributes  const&  attributes  = item.getAttributes();
-
     yaml_char_t*  data            = convertStringToYamlCharPtr(value, UseEmptyString);
     yaml_char_t*  anchor          = convertStringToYamlCharPtr(getAttribute(attributes, "anchor", ""));
     yaml_char_t*  tag             = convertStringToYamlCharPtr(getAttribute(attributes, "tag", ""));
@@ -86,33 +83,40 @@ bool YamlEmitter::writeScalar(Parser::ParserValue const& item)
 }
 
 
-void YamlEmitter::writeString(Parser::ParserStringItem const& stringItem)
+void YamlEmitter::writeString(std::string const& stringValue, Parser::Attributes const& attributes)
 {
-    if (!writeScalar(stringItem))
+    if (!writeScalar(stringValue, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeString: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeNumber(Parser::ParserNumberItem const& numberItem)
+void YamlEmitter::writeNumber(std::string const& stringValue, double, Parser::Attributes const& attributes)
 {
-    if (!writeScalar(numberItem))
+    if (!writeScalar(stringValue, attributes))
+    {
+        throw std::runtime_error("YamlEmitter::writeNumber: Failed scalar_event_initialize");
+    }
+}
+void YamlEmitter::writeNumber(std::string const& stringValue, long, Parser::Attributes const& attributes)
+{
+    if (!writeScalar(stringValue, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeNumber: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeBool(Parser::ParserBoolItem const& boolItem)
+void YamlEmitter::writeBool(std::string const& stringValue, bool, Parser::Attributes const& attributes)
 {
-    if (!writeScalar(boolItem))
+    if (!writeScalar(stringValue, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeBool: Failed scalar_event_initialize");
     }
 }
 
-void YamlEmitter::writeNull(Parser::ParserNULLItem const& nullItem)
+void YamlEmitter::writeNull(std::string const& stringValue, Parser::Attributes const& attributes)
 {
-    if (!writeScalar(nullItem))
+    if (!writeScalar(stringValue, attributes))
     {
         throw std::runtime_error("YamlEmitter::writeNull: Failed scalar_event_initialize");
     }

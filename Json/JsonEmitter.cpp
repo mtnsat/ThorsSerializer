@@ -36,10 +36,10 @@ std::string const& JsonEmitter::seporator()
     return element;
 }
 
-void JsonEmitter::writeString(Parser::ParserStringItem const& stringItem)
+void JsonEmitter::writeString(std::string const& stringValue, Parser::Attributes const&)
 {
     stream << seporator() << '"';
-    std::for_each(std::begin(stringItem.value), std::end(stringItem.value), [this](char next)
+    std::for_each(std::begin(stringValue), std::end(stringValue), [this](char next)
     {
         switch(next)
         {
@@ -51,17 +51,22 @@ void JsonEmitter::writeString(Parser::ParserStringItem const& stringItem)
     stream << '"';
 }
 
-void JsonEmitter::writeNumber(Parser::ParserNumberItem const& numberItem)
+void JsonEmitter::writeNumber(std::string const& stringValue, double, Parser::Attributes const&)
 {
-    stream << seporator() << numberItem.value;
+    stream << seporator() << stringValue;
 }
 
-void JsonEmitter::writeBool(Parser::ParserBoolItem const& boolItem)
+void JsonEmitter::writeNumber(std::string const& stringValue, long, Parser::Attributes const&)
 {
-    stream << seporator() << std::boolalpha << boolItem.boolValue;
+    stream << seporator() << stringValue;
 }
 
-void JsonEmitter::writeNull(Parser::ParserNULLItem const&)
+void JsonEmitter::writeBool(std::string const&, bool value, Parser::Attributes const&)
+{
+    stream << seporator() << std::boolalpha << value;
+}
+
+void JsonEmitter::writeNull(std::string const&, Parser::Attributes const&)
 {
     stream << seporator() << "null";
 }

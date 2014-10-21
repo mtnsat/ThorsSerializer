@@ -24,16 +24,18 @@ namespace ThorsAnvil
                 template<typename T>
                 EmitterInterface& operator<<(T const& val)    {stream << val;return *this;}
 
-                virtual void writeString(ParserStringItem const& stringItem)        = 0;
-                virtual void writeNumber(ParserNumberItem const& numberItem)        = 0;
-                virtual void writeBool(ParserBoolItem const& boolItem)              = 0;
-                virtual void writeNull(ParserNULLItem const& nullItem)              = 0;
-                virtual void writeMapStart(Parser::Attributes const& attributes)    = 0;
-                virtual void writeMapEnd(Parser::Attributes const& attributes)      = 0;
-                virtual void writeArrayStart(Parser::Attributes const& attributes)  = 0;
-                virtual void writeArrayEnd(Parser::Attributes const& attributes)    = 0;
-                virtual void writeDocStart(Parser::Attributes const& attributes)    = 0;
-                virtual void writeDocEnd(Parser::Attributes const& attributes)      = 0;
+                virtual void writeString(std::string const& stringValue, Attributes const& attributes)                  = 0;
+                virtual void writeNumber(std::string const& stringValue, double value, Attributes const& attributes)    = 0;
+                virtual void writeNumber(std::string const& stringValue, long value, Attributes const& attributes)      = 0;
+                virtual void writeBool(std::string const& stringValue, bool value, Attributes const& attributes)        = 0;
+                virtual void writeNull(std::string const& stringValue, Attributes const& attributes)                    = 0;
+
+                virtual void writeMapStart(Attributes const& attributes)    = 0;
+                virtual void writeMapEnd(Attributes const& attributes)      = 0;
+                virtual void writeArrayStart(Attributes const& attributes)  = 0;
+                virtual void writeArrayEnd(Attributes const& attributes)    = 0;
+                virtual void writeDocStart(Attributes const& attributes)    = 0;
+                virtual void writeDocEnd(Attributes const& attributes)      = 0;
         };
     }
 }

@@ -45,22 +45,29 @@ DomSerializeVisitor::DomSerializeVisitor(EmitterInterface& emitter)
 void DomSerializeVisitor::visit(ParserStringItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeString(item);
+    emitter.writeString(item.value, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserNumberItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeNumber(item);
+    if (item.value.find('.') == std::string::npos)
+    {
+        emitter.writeNumber(item.value, item.getValue<long>(), item.getAttributes());
+    }
+    else
+    {
+        emitter.writeNumber(item.value, item.getValue<double>(), item.getAttributes());
+    }
 }
 void DomSerializeVisitor::visit(ParserBoolItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeBool(item);
+    emitter.writeBool(item.value, item.boolValue, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserNULLItem const& item)
 {
     details::DocWriter   writer(docStart, item, emitter);
-    emitter.writeNull(item);
+    emitter.writeNull(item.value, item.getAttributes());
 }
 void DomSerializeVisitor::visit(ParserMapItem const& item)
 {

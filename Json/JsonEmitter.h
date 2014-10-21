@@ -21,10 +21,11 @@ class JsonEmitter: public Parser::EmitterInterface
         JsonEmitter(std::ostream& stream);
         ~JsonEmitter();
 
-        virtual void writeString(Parser::ParserStringItem const& stringItem)    override;
-        virtual void writeNumber(Parser::ParserNumberItem const& numberItem)    override;
-        virtual void writeBool(Parser::ParserBoolItem const& boolItem)          override;
-        virtual void writeNull(Parser::ParserNULLItem const& nullItem)          override;
+        virtual void writeString(std::string const& stringValue, Parser::Attributes const& attributes)                  override;
+        virtual void writeNumber(std::string const& stringValue, double value, Parser::Attributes const& attributes)    override; 
+        virtual void writeNumber(std::string const& stringValue, long value, Parser::Attributes const& attributes)      override; 
+        virtual void writeBool(std::string const& stringValue, bool value, Parser::Attributes const& attributes)        override; 
+        virtual void writeNull(std::string const& stringValue, Parser::Attributes const& attributes)                    override; 
         virtual void writeMapStart(Parser::Attributes const& attributes)        override;
         virtual void writeMapEnd(Parser::Attributes const& attributes)          override;
         virtual void writeArrayStart(Parser::Attributes const& attributes)      override;
