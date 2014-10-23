@@ -1,4 +1,5 @@
 *.o
+.*.swp
 unittest
 coverage/
 debug/
