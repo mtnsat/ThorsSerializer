@@ -4,6 +4,7 @@
 
 #include "serializer.h"
 #include "Json/JsonScanner.h"
+#include "Json/JsonEmitter.h"
 
 namespace ThorsAnvil
 {
@@ -16,9 +17,9 @@ Importer<T, ThorsAnvil::Json::JsonScannerSax> jsonImport(T& obj)
     return Importer<T, ThorsAnvil::Json::JsonScannerSax>(obj);
 }
 template<typename T>
-Exporter<T, ThorsAnvil::Json::JsonPrinterSax> jsonExport(T const& obj)
+Exporter<T, ThorsAnvil::Json::JsonEmitter> jsonExport(T const& obj)
 {
-    return Exporter<T, ThorsAnvil::Json::JsonPrinterSax>(obj);
+    return Exporter<T, ThorsAnvil::Json::JsonEmitter>(obj);
 }
 
 // To force an object file to be created (so tests will be run correctly).
