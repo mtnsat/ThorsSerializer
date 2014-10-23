@@ -17,4 +17,9 @@ install:
     - popd
 script:
     - make 
+branches:
+  only:
+      - master
+      - /^feature-*$/
+      - /^version-*$/
 
