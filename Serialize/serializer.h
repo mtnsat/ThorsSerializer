@@ -3,6 +3,7 @@
 #define THORSANVIL_SERIALIZER_SERIALIZER_H
 
 #include "Parser/ScannerSax.h"
+#include "Parser/EmitterInterface.h"
 #include <boost/mpl/vector.hpp>
 #include <boost/type_traits/integral_constant.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
@@ -59,7 +60,7 @@
 #define THOR_BUILD_Initialize_Val5(Sc, Obj,  local, member, ...) { Sc, Obj, #member, &local::member }, THOR_BUILD_Initialize_Val4(Sc, Obj,  local, __VA_ARGS__)
 #define THOR_BUILD_Initialize_Val4(Sc, Obj,  local, member, ...) { Sc, Obj, #member, &local::member }, THOR_BUILD_Initialize_Val3(Sc, Obj,  local, __VA_ARGS__)
 #define THOR_BUILD_Initialize_Val3(Sc, Obj,  local, member, ...) { Sc, Obj, #member, &local::member }, THOR_BUILD_Initialize_Val2(Sc, Obj,  local, __VA_ARGS__)
-#define THOR_BUILD_Initialize_Val2(Sc, Obj,  local, member)      { Sc, Obj, #member, &local::member, false }
+#define THOR_BUILD_Initialize_Val2(Sc, Obj,  local, member)      { Sc, Obj, #member, &local::member }
 #define THOR_BUILD_Initialize_Val1(Sc, Obj,  local)
 
 #define THOR_BUILD_GetLocal(...)                THOR_BUILD_GetLocal_C1(THOR_BUILD_SERIALIZE_COUNT_ARGS(__VA_ARGS__), __VA_ARGS__)
@@ -119,11 +120,11 @@ namespace ThorsAnvil                                                            
                         THOR_BUILD_Initialize_Val(scanner, object, __VA_ARGS__)         \
                     };                                                                  \
                 }                                                                       \
-                static void printer(Parser::PrinterBaseSax& printer, LocalType const& object)   \
+                static void printer(Parser::EmitterInterface& emitter, LocalType const& object)   \
                 {                                                                       \
-                    ObjectPrinter<Type> objectPrinter(printer);                         \
+                    ObjectPrinter<Type> objectPrinter(emitter);                         \
                     Printers{                                                           \
-                        THOR_BUILD_Initialize_Val(printer, object, __VA_ARGS__)         \
+                        THOR_BUILD_Initialize_Val(emitter, object, __VA_ARGS__)         \
                     };                                                                  \
                 }                                                                       \
             };                                                                          \
@@ -136,44 +137,6 @@ namespace ThorsAnvil                                                            
 
 namespace ThorsAnvil
 {
-    namespace Parser
-    {
-        class PrinterBaseSax
-        {
-            protected:
-                std::ostream&   stream;
-
-            public:
-                PrinterBaseSax(std::ostream& stream)
-                    : stream(stream)
-                {}
-                template<typename T>
-                PrinterBaseSax& operator<<(T const& val)    {stream << val;return *this;}
-
-                virtual void    docBeg()            {}
-                virtual void    docEnd()            {}
-                virtual void    arrayBeg()          = 0;
-                virtual void    arrayEnd()          = 0;
-                virtual void    mapBeg()            = 0;
-                virtual void    mapEnd()            = 0;
-        };
-    }
-    namespace Json
-    {
-        class JsonPrinterSax: public Parser::PrinterBaseSax
-        {
-            public:
-                JsonPrinterSax(std::ostream& stream)
-                    : PrinterBaseSax(stream)
-                {}
-
-                virtual void    arrayBeg()          {stream << '[';}
-                virtual void    arrayEnd()          {stream << ']';}
-                virtual void    mapBeg()            {stream << '{';}
-                virtual void    mapEnd()            {stream << '}';}
-        };
-    }
-
     namespace Utility
     {
         template<typename T>
@@ -192,9 +155,27 @@ namespace ThorsAnvil
                 public:
                     enum { type = Invalid };
                     static void scanner(Parser::ScannerBaseSax&,T&)
-                    {}
-                    static void printer(Parser::PrinterBaseSax&,T const&)
-                    {}
+                    {
+                        std::cerr << "JsonSerializeTraits: Failed Scan\n";
+                    }
+                    static void printer(Parser::EmitterInterface&,T const&)
+                    {
+                        std::cerr << "JsonSerializeTraits: Failed Print\n";
+                    }
+            };
+            template<>
+            class JsonSerializeTraits<std::string, false>
+            {
+                public:
+                    enum { type = Invalid };
+                    static void scanner(Parser::ScannerBaseSax&, std::string&)
+                    {
+                        std::cerr << "JsonSerializeTraits: Scan For String\n";
+                    }
+                    static void printer(Parser::EmitterInterface&, std::string const&)
+                    {
+                        std::cerr << "JsonSerializeTraits: Print for String\n";
+                    }
             };
 
             template<typename T>
@@ -204,12 +185,12 @@ namespace ThorsAnvil
                     enum { type = Invalid };
                     static void scanner(Parser::ScannerBaseSax&,T&)
                     {}
-                    static void printer(Parser::PrinterBaseSax& printer,T* const& object)
+                    static void printer(Parser::EmitterInterface& emitter,T* const& object)
                     {
                         if (object != nullptr)
                         {   throw std::runtime_error("!!!!");
                         }
-                        printer << "null";
+                        emitter << "null";
                     }
             };
             template<typename T>
@@ -218,10 +199,13 @@ namespace ThorsAnvil
                 public:
                     enum { type = Invalid };
                     static void scanner(Parser::ScannerBaseSax&,T&)
-                    {}
-                    static void printer(Parser::PrinterBaseSax& printer,T const& object)
                     {
-                        printer << object;
+                        std::cerr << "JsonSerializeTraits: Scan Base Type\n";
+                    }
+                    static void printer(Parser::EmitterInterface& emitter,T const& object)
+                    {
+                        std::cerr << "JsonSerializeTraits: Print Base Type\n";
+                        emitter << object;
                     }
             };
         }
@@ -239,47 +223,50 @@ class PrefixPrinter;
 template<>
 class ObjectPrinter<Json::Map>
 {
-    Parser::PrinterBaseSax& printer;
+    Parser::EmitterInterface& emitter;
+    Parser::Attributes        attributes;
     public:
-        ObjectPrinter(Parser::PrinterBaseSax& printer)
-            : printer(printer)
+        ObjectPrinter(Parser::EmitterInterface& emitter)
+            : emitter(emitter)
         {
-            printer.mapBeg();
+            emitter.writeMapStart(attributes);
         }
         ~ObjectPrinter()
         {
-            printer.mapEnd();
+            emitter.writeMapEnd(attributes);
         }
 };
 template<>
 class ObjectPrinter<Json::Array>
 {
-    Parser::PrinterBaseSax& printer;
+    Parser::EmitterInterface& emitter;
+    Parser::Attributes        attributes;
     public:
-        ObjectPrinter(Parser::PrinterBaseSax& printer)
-            : printer(printer)
+        ObjectPrinter(Parser::EmitterInterface& emitter)
+            : emitter(emitter)
         {
-            printer.arrayBeg();
+            emitter.writeArrayStart(attributes);
         }
         ~ObjectPrinter()
         {
-            printer.arrayEnd();
+            emitter.writeArrayEnd(attributes);
         }
 };
 template<>
 class PrefixPrinter<Json::Map>
 {
+    Parser::Attributes        attributes;
     public:
-        PrefixPrinter(Parser::PrinterBaseSax& printer, std::string const& name)
+        PrefixPrinter(Parser::EmitterInterface& emitter, std::string const& name)
         {
-            printer << "\"" << name << "\": ";
+            emitter.writeString(name, attributes);
         }
 };
 template<>
 class PrefixPrinter<Json::Array>
 {
     public:
-        PrefixPrinter(Parser::PrinterBaseSax&, std::string const&)
+        PrefixPrinter(Parser::EmitterInterface&, std::string const&)
         {}
 };
 
@@ -321,7 +308,7 @@ class MemberScanner
 
     friend class MemberScannerAction;
     public:
-        MemberScanner(Parser::ScannerBaseSax& serializer, T& object, std::string const& name, M dst, bool = true)
+        MemberScanner(Parser::ScannerBaseSax& serializer, T& object, std::string const& name, M dst)
             : object(object)
             , dst(dst)
         {
@@ -337,17 +324,14 @@ template<typename T, typename M, int TypeSpecialization>
 class MemberPrinter
 {
     public:
-        MemberPrinter(Parser::PrinterBaseSax& printer, T const& object, std::string const& name, M src, bool inSeq = true)
+        MemberPrinter(Parser::EmitterInterface& emitter, T const& object, std::string const& name, M src)
         {
-            PrefixPrinter<TypeSpecialization>   prefixPrinter(printer, name);
+            PrefixPrinter<TypeSpecialization>   prefixPrinter(emitter, name);
 
             using ObjRefType    = decltype(const_cast<T&>(object).*src);
             using ObjType       = typename std::remove_reference<ObjRefType>::type;
             using Traits        = ThorsAnvil::Serialize::Json::JsonSerializeTraits<ObjType>;
-            Traits::printer(printer, (object.*src));
-            if (inSeq)
-            {   printer << ",";
-            }
+            Traits::printer(emitter, (object.*src));
         }
 };
 
@@ -436,10 +420,12 @@ class Exporter
     {
         typedef ThorsAnvil::Serialize::Json::JsonSerializeTraits<T>    Traits;
 
+        Parser::Attributes  attributes;
+
         Printer      printer(stream);
-        printer.docBeg();
+        printer.writeDocStart(attributes);
         Traits::printer(printer, data.object);
-        printer.docEnd();
+        printer.writeDocEnd(attributes);
 
         return stream;
     }
