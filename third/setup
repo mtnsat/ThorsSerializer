@@ -14,23 +14,34 @@ popd
 
 
 install="sudo apt-get --yes"
+check="list"
 
 host=`uname`
 if [[ "${host}" == "Darwin" ]]; then
     # This is a mac use brew
     install="brew"
+    check="brew"
 fi
 
 #
 # Need this for building
-${install} install bison
-${install} install flex
+bison --version >/dev/null 2>&1 || { echo >&2 "bison required but not install. Will attempt to install"; exit 1; }
+if [[ $? == 1 ]]; then
+    ${install} install bison
+fi
+flex --version >/dev/null 2>&1 || { echo >&2 "flex required but not install. Will attempt to install"; exit 1; }
+if [[ $? == 1 ]]; then
+    ${install} install flex
+fi
 if [[ "${host}" == "Linux" ]]; then
     ${install} install libboost-dev
     ${install} install libboost-doc
 fi
 if [[ "${host}" == "Darwin" ]]; then
-    ${install} install boost
+    ${check} list boost >/dev/null 2>&1 || { echo >&2 "boost required but not install. Will attempt to install"; exit 1; }
+    if [[ $? == 1 ]]; then
+        ${install} install boost
+    fi
 fi
 
 
