@@ -1,7 +1,7 @@
 
-THORSANVIL_ROOT           = $(realpath ./)
+THORSANVIL_ROOT			= $(realpath ./)
 
-TARGET				 = Json Serialize
+TARGET					= Parser Json Yaml Serialize
 
 include $(THORSANVIL_ROOT)/build/tools/Project.Makefile
 
