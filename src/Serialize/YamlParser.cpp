@@ -217,13 +217,22 @@ void YamlParser::getValue(bool& value)
     }
     else
     {
-        throw std::runtime_error("ThorsAnvil::Serialize::YamlParser: Not a bool");
+        throw std::runtime_error("ThorsAnvil::Serialize::YamlParser::getValue: Not a bool");
     }
 }
 
 void YamlParser::getValue(std::string& value)
 {
     value = getString();
+}
+
+bool YamlParser::isValueNull()
+{
+    char const* buffer  = reinterpret_cast<char const*>(event.data.scalar.value);
+    std::size_t length  = event.data.scalar.length;
+
+    return (length == 4 && strncmp(buffer, "null", 4) == 0)
+       ||  (length == 1 && strncmp(buffer, "~", 1) == 0);
 }
 
 std::string YamlParser::getRawValue()

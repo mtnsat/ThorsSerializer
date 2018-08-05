@@ -7,17 +7,23 @@
  *  specializations for user defined types.
  *
  *      ThorsAnvil_MakeTraitCustom(DataType)    // Will use operator << and operator >>
+ *      ThorsAnvil_PointerAllocator(DataType, Action)
  *      ThorsAnvil_MakeTrait(DataType, ...)
  *      ThorsAnvil_ExpandTrait(ParentType, DataType, ...)
  *      ThorsAnvil_Template_MakeTrait(TemplateParameterCount, DataType, ...)
  *      ThorsAnvil_Template_ExpandTrait(TemplateParameterCount, ParentType, DataType, ...)
  *      ThorsAnvil_MakeEnum(<EnumType>, <EnumValues>...)
  *
+ *      ThorsAnvil_PolyMorphicSerializer(Type)
+ *      ThorsAnvil_RegisterPolyMorphicType(Type)
+ *
  * See README.md for examples.
  */
 
 #include <string>
 #include <tuple>
+#include <map>
+#include <functional>
 
 /*
  * Macros for counting the number of arguments
@@ -125,6 +131,11 @@
 #define LAST_THOR_TYPENAMEVALUEACTION(Ex, Id)
 #define LAST_THOR_CHECK_ASSERT(Ex, Id)          DO_ASSERT(Ex)
 
+
+#define THOR_MERGE_LABEL_NAME(Pre, Post)        Pre ## Post
+#define THOR_UNIQUE_LABEL(Line)                 THOR_MERGE_LABEL_NAME(thorUniqueName, Line)
+#define THOR_UNIQUE_NAME                        THOR_UNIQUE_LABEL(__LINE__)
+
 /*
  * Defines a trait for a user defined type.
  * Lists the members of the type that can be serialized.
@@ -135,6 +146,16 @@ static_assert(                                                          \
     "The macro ThorsAnvil_MakeTrait must be used outside all namespace."\
 )
 
+#define ThorsAnvil_PointerAllocator(DataType, Action)                   \
+namespace ThorsAnvil { namespace Serialize {                            \
+template<>                                                              \
+class Traits<DataType*>                                                 \
+{                                                                       \
+    public:                                                             \
+        static constexpr TraitType type = TraitType::Pointer;           \
+        static DataType* alloc() Action                                 \
+};                                                                      \
+}}
 #define ThorsAnvil_MakeTrait_Base(Parent, TType, Count, DataType, ...)  \
 namespace ThorsAnvil { namespace Serialize {                            \
 template<BUILDTEMPLATETYPEPARAM(THOR_TYPENAMEPARAMACTION, Count)>       \
@@ -159,11 +180,31 @@ class Traits<DataType BUILDTEMPLATETYPEVALUE(THOR_TYPENAMEVALUEACTION, Count) > 
 }}                                                                      \
 ALT_REP_OF_N(THOR_CHECK_ASSERT, DataType, , , Count)
 
+#define ThorsAnvil_RegisterPolyMorphicType_Internal(DataType, ...)      \
+    ThorsAnvil_RegisterPolyMorphicType(DataType)
+
+#pragma vera-pushoff
+#define ThorsAnvil_RegisterPolyMorphicType(DataType)                    \
+namespace ThorsAnvil { namespace Serialize {                            \
+namespace                                                               \
+{                                                                       \
+    ThorsAnvil_InitPolyMorphicType<DataType>   THOR_UNIQUE_NAME( # DataType); \
+}                                                                       \
+}}
+#pragma vera-pop
+
+#define ThorsAnvil_NoParent(Count, DataType, ...)           typedef DataType BUILDTEMPLATETYPEVALUE(THOR_TYPENAMEVALUEACTION, Count)    Root;
+#define ThorsAnvil_Parent(Count, ParentType, DataType, ...) typedef ParentType  Parent; \
+                                                            typedef typename Traits<ParentType>::Root Root;
+
 #define ThorsAnvil_Template_MakeTrait(Count, ...)                       \
-    ThorsAnvil_MakeTrait_Base( , Map, Count, __VA_ARGS__, 1)
+    ThorsAnvil_MakeTrait_Base(ThorsAnvil_NoParent(Count, __VA_ARGS__, 1) , Map, Count, __VA_ARGS__, 1)  \
+    static_assert(true)
 
 #define ThorsAnvil_MakeTrait(...)                                       \
-    ThorsAnvil_MakeTrait_Base( , Map, 0, __VA_ARGS__, 1)
+    ThorsAnvil_MakeTrait_Base(ThorsAnvil_NoParent(0, __VA_ARGS__, 1) , Map, 0, __VA_ARGS__, 1);               \
+    ThorsAnvil_RegisterPolyMorphicType_Internal(__VA_ARGS__, 1)         \
+    static_assert(true)
 
 #define ThorsAnvil_MakeTraitCustom(DataType)                            \
 template<> class ThorsAnvil::Serialize::Traits<DataType>                \
@@ -172,7 +213,8 @@ template<> class ThorsAnvil::Serialize::Traits<DataType>                \
 }
 
 #define ThorsAnvil_Template_ExpandTrait(Count, ParentType, ...)         \
-    ThorsAnvil_MakeTrait_Base(typedef ParentType Parent;, Parent, Count, __VA_ARGS__, 1)
+    ThorsAnvil_MakeTrait_Base(ThorsAnvil_Parent(Count, ParentType, __VA_ARGS__, 1), Parent, Count, __VA_ARGS__, 1) \
+    static_assert(true)
 
 #define ThorsAnvil_ExpandTrait(ParentType, DataType, ...)               \
     static_assert(                                                      \
@@ -182,7 +224,9 @@ template<> class ThorsAnvil::Serialize::Traits<DataType>                \
         ::ThorsAnvil::Serialize::Traits<ParentType>::type != ThorsAnvil::Serialize::TraitType::Invalid, \
         "Parent type must have Serialization Traits defined"            \
     );                                                                  \
-    ThorsAnvil_MakeTrait_Base(typedef ParentType Parent;, Parent, 0, DataType, __VA_ARGS__, 1)
+    ThorsAnvil_MakeTrait_Base(ThorsAnvil_Parent(0, ParentType, DataType, __VA_ARGS__, 1), Parent, 0, DataType, __VA_ARGS__, 1); \
+    ThorsAnvil_RegisterPolyMorphicType_Internal(DataType, 1)            \
+    static_assert(true)
 
 #define ThorsAnvil_MakeEnum(EnumName, ...)                              \
 namespace ThorsAnvil { namespace Serialize {                            \
@@ -218,16 +262,35 @@ class Traits<EnumName>                                                  \
 }}                                                                      \
 DO_ASSERT(EnumName)
 
-
 /*
- * Defines the generic type that all serialization types can expand on
+ * Defined the virtual function needed by tryPrintPolyMorphicObject()
  */
+#define ThorsAnvil_PolyMorphicSerializer(Type)                                              \
+    virtual void printPolyMorphicObject(ThorsAnvil::Serialize::Serializer&         parent,  \
+                                       ThorsAnvil::Serialize::PrinterInterface&    printer) \
+    {                                                                                       \
+        ThorsAnvil::Serialize::printPolyMorphicObject<Type>(parent, printer, *this);        \
+    }                                                                                       \
+    virtual void parsePolyMorphicObject(ThorsAnvil::Serialize::DeSerializer&       parent,  \
+                                       ThorsAnvil::Serialize::ParserInterface&     parser)  \
+    {                                                                                       \
+        ThorsAnvil::Serialize::parsePolyMorphicObject<Type>(parent, parser, *this);         \
+    }                                                                                       \
+    static constexpr char const* polyMorphicSerializerName()                                \
+    {                                                                                       \
+        return #Type;                                                                       \
+    }
+
+
 namespace ThorsAnvil
 {
     namespace Serialize
     {
 
-enum class TraitType {Invalid, Parent, Value, Map, Array, Enum, Serialize};
+/*
+ * Defines the generic type that all serialization types can expand on
+ */
+enum class TraitType {Invalid, Parent, Value, Map, Array, Enum, Pointer, Serialize};
 template<typename T>
 class Traits
 {
@@ -251,6 +314,23 @@ class Traits
         // So I use a static member function with a static variable
         // which can be defined in-line within the traits class and
         // does not need a separate declaration in a compilation unit.
+};
+
+/*
+ * A specialization for pointer objects.
+ * They are a pointer type. When serialized a pointer will emit:
+ *      If the pointer is nullptr:      A "null" object.
+ *      Otherwise de-reference the pointer and emit like normal.
+ *
+ * If the de-referenced type has a Traits class then it will be normally
+ * serialized. Otherwise there will be an error.
+ */
+template<typename T>
+class Traits<T*>
+{
+    public:
+        static constexpr TraitType type = TraitType::Pointer;
+        static T* alloc() {return new T;}
 };
 
 /*
@@ -290,6 +370,74 @@ class SerializeArraySize
         {
             return object.size();
         }
+};
+
+/*
+ */
+class PolyMorphicRegistry
+{
+    static std::map<std::string, std::function<void*()>>& getContainer()
+    {
+        static std::map<std::string, std::function<void*()>>    polyAllocContainer;
+        return polyAllocContainer;
+    }
+
+    public:
+        static std::function<void*()>& getAllocator(std::string const& name)
+        {
+            return getContainer()[name];
+        }
+        template<typename T>
+        static T* getNamedTypeConvertedTo(std::string const& name)
+        {
+            using Root = typename Traits<T>::Root;
+
+            auto     cont       = getContainer();
+            auto     find       = cont.find(name);
+            if (find == cont.end())
+            {
+                throw std::runtime_error("ThorsAnvil::Serialize::PolyMorphicRegistry::getNamedTypeConvertedTo: Non polymorphic type");
+            }
+            void*    data        = find->second();
+            Root*    dataBase    = reinterpret_cast<Root*>(data);
+            return dynamic_cast<T*>(dataBase);
+        }
+};
+
+template <typename T>
+class HasPolyMorphicObjectMarker
+{
+    typedef char one;
+    typedef long two;
+
+    template <typename C> static one test( decltype(&C::parsePolyMorphicObject) );
+    template <typename C> static two test(...);
+
+public:
+    enum { Value = sizeof(test<T>(nullptr)) == sizeof(char) };
+};
+
+
+template<typename T, bool Poly = HasPolyMorphicObjectMarker<T>::Value>
+struct ThorsAnvil_InitPolyMorphicType;
+
+
+template<typename T>
+struct ThorsAnvil_InitPolyMorphicType<T, true>
+{
+    ThorsAnvil_InitPolyMorphicType(char const* name)
+    {
+        PolyMorphicRegistry::getAllocator(name) =
+            []() -> void*
+            {   return dynamic_cast<typename Traits<T>::Root*>(Traits<T*>::alloc());
+            };
+    }
+};
+
+template<typename T>
+struct ThorsAnvil_InitPolyMorphicType<T, false>
+{
+    ThorsAnvil_InitPolyMorphicType(char const*){}
 };
 
     }

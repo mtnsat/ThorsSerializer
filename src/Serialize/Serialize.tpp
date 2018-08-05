@@ -1,12 +1,9 @@
 #ifndef THORS_ANVIL_SERIALIZE_SERIALIZE_TPP
 #define THORS_ANVIL_SERIALIZE_SERIALIZE_TPP
 
-//#include <iostream>
-//#include <vector>
-//#include <cstdlib>
-//#include "Traits.h"
 #include <algorithm>
 #include <sstream>
+#include <type_traits>
 
 
 namespace ThorsAnvil
@@ -127,6 +124,92 @@ class DeSerializationForBlock<TraitType::Serialize, T>
             valueStream >> object;
         }
 };
+/* ------------ tryParsePolyMorphicObject Serializer ------------------------- */
+template<class T>
+auto tryParsePolyMorphicObject(DeSerializer& parent, ParserInterface& parser, T& object, int) -> decltype(object->parsePolyMorphicObject(parent, parser), void())
+{
+    ParserInterface::ParserToken    tokenType;
+    tokenType = parser.getToken();
+    if (tokenType != ParserInterface::ParserToken::MapStart)
+    {   throw std::runtime_error("ThorsAnvil::Serialize::tryParsePolyMorphicObject: Invalid Object. Expecting MapStart");
+    }
+
+    tokenType = parser.getToken();
+    if (tokenType != ParserInterface::ParserToken::Key)
+    {   throw std::runtime_error("ThorsAnvil::Serialize::tryParsePolyMorphicObject: Invalid Object. Expecting Key");
+    }
+
+
+    std::string keyValue;
+    if (parser.getKey() != "__type")
+    {   throw std::runtime_error("ThorsAnvil::Serialize::tryParsePolyMorphicObject: Invalid PolyMorphic Object. Expecting Key Name __type");
+    }
+
+    tokenType = parser.getToken();
+    if (tokenType != ParserInterface::ParserToken::Value)
+    {   throw std::runtime_error("ThorsAnvil::Serialize::tryParsePolyMorphicObject: Invalid Object. Expecting Value");
+    }
+
+    std::string className;
+    parser.getValue(className);
+
+    using BaseType  = typename std::remove_pointer<T>::type;
+    object = PolyMorphicRegistry::getNamedTypeConvertedTo<BaseType>(className);
+
+    // This uses a virtual method in the object to
+    // call parsePolyMorphicObject() the difference
+    // will be the type of the template used as we will
+    // get the type 'T' of the most derived type of
+    // the actual runtime object.
+    //
+    // To install this virtual method use the macro
+    // ThorsAnvil_PolyMorphicSerializer  See Traits.h for details.
+    parser.pushBackToken(ParserInterface::ParserToken::MapStart);
+    object->parsePolyMorphicObject(parent, parser);
+}
+template<class T>
+auto tryParsePolyMorphicObject(DeSerializer& parent, ParserInterface& parser, T& object, long) -> void
+{
+    using TraitPoint = Traits<T>;
+    object = TraitPoint::alloc();
+
+    parsePolyMorphicObject(parent, parser, *object);
+}
+/* ------------ PolyMorphic Serializer ------------------------- */
+template<typename T>
+void parsePolyMorphicObject(DeSerializer& parent, ParserInterface& parser, T& object)
+{
+    using TraitBase = Traits<T>;
+    DeSerializationForBlock<TraitBase::type, T>   pointerDeSerializer(parent, parser);
+    pointerDeSerializer.scanObject(object);
+}
+
+template<typename T>
+class DeSerializationForBlock<TraitType::Pointer, T>
+{
+    DeSerializer&       parent;
+    ParserInterface&    parser;
+    public:
+        DeSerializationForBlock(DeSerializer& parent, ParserInterface& parser)
+            : parent(parent)
+            , parser(parser)
+        {}
+        void scanObject(T& object)
+        {
+            delete object;
+
+            ParserInterface::ParserToken    tokenType = parser.getToken();
+            if (parser.isValueNull())
+            {
+                object = nullptr;
+                return;
+            }
+
+            parser.pushBackToken(tokenType);
+
+            tryParsePolyMorphicObject(parent, parser, object, 0);
+        }
+};
 /*
  * Specialization for Enum.
  * This is only used at the top level.
@@ -202,12 +285,9 @@ class DeSerializationForBlock<TraitType::Array, T>
 
 /* ------------ DeSerializeMember ------------------------- */
 
-template<typename T, typename M, TraitType type>
-DeSerializeMember<T, M, type>::DeSerializeMember(ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
+template<typename T, typename M>
+DeSerializeMemberContainer<T, M>::DeSerializeMemberContainer(DeSerializer&, ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
 {
-    static_assert(type != TraitType::Invalid, "Trying to de-serialize an object that does not have a ThorsAnvil::Serialize::Trait<> defined."
-                                              "Look at macro ThorsAnvil_MakeTrait() for more information.");
-
     if (key.compare(memberInfo.first) == 0)
     {
         used = true;
@@ -216,114 +296,54 @@ DeSerializeMember<T, M, type>::DeSerializeMember(ParserInterface& parser, std::s
     }
 }
 
-template<typename T, typename M>
-class DeSerializeMember<T, M, TraitType::Value>
+template<typename T, typename M, TraitType Type>
+DeSerializeMemberValue<T, M, Type>::DeSerializeMemberValue(DeSerializer& parent, ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
 {
-    bool used = false;
-    public:
-        DeSerializeMember(ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
-        {
-            if (key.compare(memberInfo.first) == 0)
-            {
-                used = true;
-                ParserInterface::ParserToken tokenType = parser.getToken();
-                if (tokenType != ParserInterface::ParserToken::Value)
-                {   throw std::runtime_error("ThorsAnvil::Serialize::DeSerializeMember::DeSerializeMember: Expecting Value Token");
-                }
+    init(parent, parser, key, memberInfo.first, object.*(memberInfo.second));
+}
 
-                parser.getValue(object.*(memberInfo.second));
-            }
-        }
-        DeSerializeMember(ParserInterface& parser, std::string const& key, T&, std::pair<char const*, M*> const& memberInfo)
-        {
-            if (key.compare(memberInfo.first) == 0)
-            {
-                used = true;
-                ParserInterface::ParserToken tokenType = parser.getToken();
-                if (tokenType != ParserInterface::ParserToken::Value)
-                {   throw std::runtime_error("ThorsAnvil::Serialize::DeSerializeMember::DeSerializeMember: Expecting Value Token");
-                }
-
-                parser.getValue(*(memberInfo.second));
-            }
-        }
-        explicit operator bool() const {return used;}
-};
-template<typename T, typename M>
-class DeSerializeMember<T, M, TraitType::Enum>
+template<typename T, typename M, TraitType Type>
+DeSerializeMemberValue<T, M, Type>::DeSerializeMemberValue(DeSerializer& parent, ParserInterface& parser, std::string const& key, T&, std::pair<char const*, M*> const& memberInfo)
 {
-    bool used = false;
-    public:
-        DeSerializeMember(ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
-        {
-            if (key.compare(memberInfo.first) == 0)
-            {
-                used = true;
-                ParserInterface::ParserToken tokenType = parser.getToken();
-                if (tokenType != ParserInterface::ParserToken::Value)
-                {   throw std::runtime_error("ThorsAnvil::Serialize::DeSerializeMember::DeSerializeMember: Expecting Value Token");
-                }
-                std::string     objectValue;
-                parser.getValue(objectValue);
+    init(parent, parser, key, memberInfo.first, *(memberInfo.second));
+}
 
-                object.*(memberInfo.second) = Traits<M>::getValue(objectValue, "ThorsAnvil::Serialize::DeSerializeMember<T,M,Enum>::DeSerializeMember:");
-            }
-        }
-        explicit operator bool() const {return used;}
-};
-template<typename T, typename M>
-class DeSerializeMember<T, M, TraitType::Serialize>
+template<typename T, typename M, TraitType Type>
+void DeSerializeMemberValue<T, M, Type>::init(DeSerializer& parent, ParserInterface& parser, std::string const& key, char const* name, M& object)
 {
-    bool used = false;
+    if (key.compare(name) == 0)
+    {
+        used = true;
+        DeSerializationForBlock<Type, M>    deserializer(parent, parser);
+        deserializer.scanObject(object);
+    }
+}
+
+template<typename T, typename M, TraitType Type = Traits<M>::type>
+class DeSerializeMember: public TraitsInfo<T, M, Type>::DeSerializeMember
+{
+    using Parent = typename TraitsInfo<T, M, Type>::DeSerializeMember;
     public:
-        DeSerializeMember(ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
-        {
-            if (key.compare(memberInfo.first) == 0)
-            {
-                used = true;
-                ParserInterface::ParserToken tokenType = parser.getToken();
-                if (tokenType != ParserInterface::ParserToken::Value)
-                {   throw std::runtime_error("ThorsAnvil::Serialize::DeSerializeMember::DeSerializeMember: Expecting Value Token");
-                }
-
-                std::stringstream valueStream(parser.getRawValue());
-                valueStream >> (object.*(memberInfo.second));
-            }
-        }
-        DeSerializeMember(ParserInterface& parser, std::string const& key, T&, std::pair<char const*, M*> const& memberInfo)
-        {
-            if (key.compare(memberInfo.first) == 0)
-            {
-                used = true;
-                ParserInterface::ParserToken tokenType = parser.getToken();
-                if (tokenType != ParserInterface::ParserToken::Value)
-                {   throw std::runtime_error("ThorsAnvil::Serialize::DeSerializeMember::DeSerializeMember: Expecting Value Token");
-                }
-
-                std::stringstream valueStream(parser.getRawValue());
-                valueStream >> (*(memberInfo.second));
-            }
-        }
-        explicit operator bool() const {return used;}
+        using Parent::Parent;
 };
 
 template<typename T, typename M>
-DeSerializeMember<T, M> make_DeSerializeMember(ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M*> const& memberInfo)
+DeSerializeMember<T, M> make_DeSerializeMember(DeSerializer& parent, ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M*> const& memberInfo)
 {
-    return DeSerializeMember<T, M>(parser, key, object, memberInfo);
+    return DeSerializeMember<T, M>(parent, parser, key, object, memberInfo);
 }
 
 template<typename T, typename M>
-DeSerializeMember<T, M> make_DeSerializeMember(ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
+DeSerializeMember<T, M> make_DeSerializeMember(DeSerializer& parent, ParserInterface& parser, std::string const& key, T& object, std::pair<char const*, M T::*> const& memberInfo)
 {
-    return DeSerializeMember<T, M>(parser, key, object, memberInfo);
+    return DeSerializeMember<T, M>(parent, parser, key, object, memberInfo);
 }
 
 /* ------------ DeSerializer ------------------------- */
 template<typename T, typename Members, std::size_t... Seq>
 inline bool DeSerializer::scanEachMember(std::string const& key, T& object, Members const& member, std::index_sequence<Seq...> const&)
 {
-    auto memberCheck = {static_cast<bool>(make_DeSerializeMember(parser, key, object, std::get<Seq>(member)))...};
+    auto memberCheck = {static_cast<bool>(make_DeSerializeMember(*this, parser, key, object, std::get<Seq>(member)))...};
     return std::find(std::begin(memberCheck), std::end(memberCheck), true) != std::end(memberCheck);
 }
 
@@ -394,16 +414,24 @@ class SerializerForBlock
         {
             parent.printObjectMembers(object);
         }
+        void printPolyMorphicMembers(std::string const& type)
+        {
+            printer.addKey("__type");
+            printer.addValue(type);
+            printMembers();
+        }
 };
 
 template<typename T>
 class SerializerForBlock<TraitType::Value, T>
 {
+    Serializer&         parent;
     PrinterInterface&   printer;
     T const&            object;
     public:
-        SerializerForBlock(Serializer&, PrinterInterface& printer,T const& object)
-            : printer(printer)
+        SerializerForBlock(Serializer& parent, PrinterInterface& printer,T const& object)
+            : parent(parent)
+            , printer(printer)
             , object(object)
         {}
         ~SerializerForBlock()   {}
@@ -415,11 +443,13 @@ class SerializerForBlock<TraitType::Value, T>
 template<typename T>
 class SerializerForBlock<TraitType::Serialize, T>
 {
+    Serializer&         parent;
     PrinterInterface&   printer;
     T const&            object;
     public:
-        SerializerForBlock(Serializer&, PrinterInterface& printer,T const& object)
-            : printer(printer)
+        SerializerForBlock(Serializer& parent, PrinterInterface& printer,T const& object)
+            : parent(parent)
+            , printer(printer)
             , object(object)
         {}
         ~SerializerForBlock()   {}
@@ -431,14 +461,80 @@ class SerializerForBlock<TraitType::Serialize, T>
         }
 };
 
-template<typename T>
-class SerializerForBlock<TraitType::Enum, T>
+/* ------------ tryPrintPolyMorphicObject Serializer ------------------------- */
+template<class T>
+auto tryPrintPolyMorphicObject(Serializer& parent, PrinterInterface& printer, T const& object, int) -> decltype(object->printPolyMorphicObject(parent, printer), void())
 {
+    // This uses a virtual method in the object to
+    // call printPolyMorphicObject() the difference
+    // will be the type of the template used as we will
+    // get the type 'T' of the most derived type of
+    // the actual runtime object.
+    //
+    // To install this virtual method use the macro
+    // ThorsAnvil_PolyMorphicSerializer  See Traits.h for details.
+    object->printPolyMorphicObject(parent, printer);
+}
+template<class T>
+auto tryPrintPolyMorphicObject(Serializer& parent, PrinterInterface& printer, T const& object, long) -> void
+{
+    // This version is called if the object foes not have a virtual
+    // `printPolyMorphicObject()`. Thus you get a call to the current
+    // object and thus we simply use `T` and we can simply print the
+    // normal members.
+    using BaseType = typename std::remove_pointer<T>::type;
+    SerializerForBlock<ThorsAnvil::Serialize::Traits<BaseType>::type, BaseType>  block(parent, printer, *object);
+    block.printMembers();
+}
+/* ------------ PolyMorphic Serializer ------------------------- */
+template<typename T>
+void printPolyMorphicObject(Serializer& parent, PrinterInterface& printer, T const& object)
+{
+    using BaseType = typename std::remove_pointer<T>::type;
+    SerializerForBlock<ThorsAnvil::Serialize::Traits<BaseType>::type, BaseType>  block(parent, printer, object);
+
+    // Note the call to printPolyMorphicMembers() rather than printMembers()
+    // this adds the "__type": "<Type Name>"
+    block.printPolyMorphicMembers(T::polyMorphicSerializerName());
+}
+
+template<typename T>
+class SerializerForBlock<TraitType::Pointer, T>
+{
+    Serializer&         parent;
     PrinterInterface&   printer;
     T const&            object;
     public:
-        SerializerForBlock(Serializer&, PrinterInterface& printer,T const& object)
-            : printer(printer)
+        SerializerForBlock(Serializer& parent, PrinterInterface& printer,T const& object)
+            : parent(parent)
+            , printer(printer)
+            , object(object)
+        {}
+        ~SerializerForBlock()   {}
+        void printMembers()
+        {
+            if (object == nullptr)
+            {
+                printer.addNull();
+            }
+            else
+            {
+                // Use SFINE to call one of two versions of the function.
+                tryPrintPolyMorphicObject(parent, printer, object, 0);
+            }
+        }
+};
+
+template<typename T>
+class SerializerForBlock<TraitType::Enum, T>
+{
+    Serializer&         parent;
+    PrinterInterface&   printer;
+    T const&            object;
+    public:
+        SerializerForBlock(Serializer& parent, PrinterInterface& printer,T const& object)
+            : parent(parent)
+            , printer(printer)
             , object(object)
         {}
         ~SerializerForBlock()   {}
@@ -474,63 +570,52 @@ class SerializerForBlock<TraitType::Array, T>
 
 /* ------------ SerializeMember ------------------------- */
 
-template<typename T, typename M, TraitType type>
-SerializeMember<T, M, type>::SerializeMember(PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
+template<typename T, typename M>
+SerializeMemberContainer<T, M>::SerializeMemberContainer(Serializer&, PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
 {
-    static_assert(type != TraitType::Invalid, "Trying to serialize an object that does not have a ThorsAnvil::Serialize::Trait<> defined."
-                                              "Look at macro ThorsAnvil_MakeTrait() for more information.");
-
     printer.addKey(memberInfo.first);
 
     Serializer      serialzier(printer, false);
     serialzier.print(object.*(memberInfo.second));
 }
-template<typename T, typename M>
-class SerializeMember<T, M, TraitType::Value>
-{
-    public:
-        SerializeMember(PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
-        {
-            printer.addKey(memberInfo.first);
-            printer.addValue(object.*(memberInfo.second));
-        }
-        SerializeMember(PrinterInterface& printer, T const&, std::pair<char const*, M*> const& memberInfo)
-        {
-            printer.addKey(memberInfo.first);
-            printer.addValue(*(memberInfo.second));
-        }
-};
-template<typename T, typename M>
-class SerializeMember<T, M, TraitType::Serialize>
-{
-    public:
-        SerializeMember(PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
-        {
-            std::stringstream   buffer;
-            buffer << (object.*(memberInfo.second));
 
-            printer.addKey(memberInfo.first);
-            printer.addRawValue(buffer.str());
-        }
-        SerializeMember(PrinterInterface& printer, T const&, std::pair<char const*, M*> const& memberInfo)
-        {
-            std::stringstream   buffer;
-            buffer << (*(memberInfo.second));
+template<typename T, typename M, TraitType Type>
+SerializeMemberValue<T, M, Type>::SerializeMemberValue(Serializer& parent, PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
+{
+    init(parent, printer, memberInfo.first, object.*(memberInfo.second));
+}
 
-            printer.addKey(memberInfo.first);
-            printer.addRawValue(buffer.str());
-        }
+template<typename T, typename M, TraitType Type>
+SerializeMemberValue<T, M, Type>::SerializeMemberValue(Serializer& parent, PrinterInterface& printer, T const&, std::pair<char const*, M*> const& memberInfo)
+{
+    init(parent, printer, memberInfo.first, *(memberInfo.second));
+}
+
+template<typename T, typename M, TraitType Type>
+void SerializeMemberValue<T, M, Type>::init(Serializer& parent, PrinterInterface& printer, char const* member, M const& object)
+{
+    printer.addKey(member);
+    SerializerForBlock<Type, M>  serializer(parent, printer, object);
+    serializer.printMembers();
+}
+
+template<typename T, typename M, TraitType Type = Traits<typename std::remove_cv<M>::type>::type>
+class SerializeMember: public TraitsInfo<T, M, Type>::SerializeMember
+{
+    using Parent = typename TraitsInfo<T, M, Type>::SerializeMember;
+    public:
+        using Parent::Parent;
 };
 
 template<typename T, typename M>
-SerializeMember<T, M> make_SerializeMember(PrinterInterface& printer, T const& object, std::pair<char const*, M*> const& memberInfo)
+SerializeMember<T, M> make_SerializeMember(Serializer& ser, PrinterInterface& printer, T const& object, std::pair<char const*, M*> const& memberInfo)
 {
-    return SerializeMember<T,M>(printer, object, memberInfo);
+    return SerializeMember<T,M>(ser, printer, object, memberInfo);
 }
 template<typename T, typename M>
-SerializeMember<T, M> make_SerializeMember(PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
+SerializeMember<T, M> make_SerializeMember(Serializer& ser, PrinterInterface& printer, T const& object, std::pair<char const*, M T::*> const& memberInfo)
 {
-    return SerializeMember<T,M>(printer, object, memberInfo);
+    return SerializeMember<T,M>(ser, printer, object, memberInfo);
 }
 
 /* ------------ Serializer ------------------------- */
@@ -538,7 +623,7 @@ SerializeMember<T, M> make_SerializeMember(PrinterInterface& printer, T const& o
 template<typename T, typename Members, std::size_t... Seq>
 inline void Serializer::printEachMember(T const& object, Members const& member, std::index_sequence<Seq...> const&)
 {
-    auto discard = {(make_SerializeMember(printer, object, std::get<Seq>(member)),1)...};
+    auto discard = {(make_SerializeMember(*this, printer, object, std::get<Seq>(member)),1)...};
     (void)discard;
 }
 
