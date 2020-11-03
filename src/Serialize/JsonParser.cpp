@@ -190,5 +190,6 @@ bool JsonParser::isValueNull()
 
 std::string JsonParser::getRawValue()
 {
-    return getRawString();
+//    return getRawString();
+    return getString();
 }

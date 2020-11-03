@@ -274,6 +274,7 @@ void JsonPrinter::addValue(std::string const& value)
     output << '"';
 }
 
-void JsonPrinter::addRawValue(std::string const& value) {output << PrefixValue(characteristics, state.size(), state.back()) << value;}
+//void JsonPrinter::addRawValue(std::string const& value) {output << PrefixValue(characteristics, state.size(), state.back()) << value;}
+void JsonPrinter::addRawValue(std::string const& value) {output << PrefixValue(characteristics, state.size(), state.back()) << "\"" << value << "\"";}
 
 void JsonPrinter::addNull()                             {output << PrefixValue(characteristics, state.size(), state.back()) << "null";}
